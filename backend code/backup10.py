@@ -61,6 +61,7 @@ frame_original = None
 ##*/createERFilterNM1(const Ptr<ERFilter::Callback>& cb, int thresholdDelta,
 ##                                float minArea, float maxArea, float minProbability,
 ##bool nonMaxSuppression, float minProbabilityDiff)
+
 min_area = 4000
 erc1 = cv2.text.loadClassifierNM1('trained_classifierNM1.xml')
 er1 = cv2.text.createERFilterNM1(erc1, 60, 0.001, 0.13, 0.7, True, 0.1)
@@ -74,7 +75,7 @@ text_recognised = False
 def start():
 
     # construct the argument parser and parse the arguments
-    camera = cv2.VideoCapture(0)
+    camera = cv2.VideoCapture("Cerebral.mp4")
     # initialize the first frame in the video stream
     return camera
 
