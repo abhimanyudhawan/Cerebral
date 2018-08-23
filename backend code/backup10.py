@@ -62,9 +62,9 @@ frame_original = None
 ##                                float minArea, float maxArea, float minProbability,
 ##bool nonMaxSuppression, float minProbabilityDiff)
 
-min_area = 4000
+min_area = 6000
 erc1 = cv2.text.loadClassifierNM1('trained_classifierNM1.xml')
-er1 = cv2.text.createERFilterNM1(erc1, 60, 0.001, 0.13, 0.7, True, 0.1)
+er1 = cv2.text.createERFilterNM1(erc1, 60, 0.001, 0.13, 0.2, True, 0.1)
 erc2 = cv2.text.loadClassifierNM2('trained_classifierNM2.xml')
 er2 = cv2.text.createERFilterNM2(erc2, 0.9)
 
@@ -84,10 +84,9 @@ def stop(camera):
     cv2.destroyAllWindows()
 
 def save(gray_original):
-    global image_path
    ## time.sleep(0.0001)
     if(cv2.imwrite(image_path, gray_original)):
-##        cv2.imshow('my_frame2', cv2.imread(image_path))
+        #cv2.imshow('my_frame2', cv2.imread(image_path))
         return(1)
 
 def motion_detection():
@@ -112,8 +111,8 @@ def motion_detection():
     # if the contour is too small, ignore it
     # compute the bounding box for the contour, draw it on the frame,
     # and update the text
-    # (x, y, w, h) = cv2.boundingRect(c)
-    # cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        ##(x, y, w, h) = cv2.boundingRect(c)
+        ##cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
     if motion_detected:
         print("motion detected", random.random())
         
@@ -143,7 +142,7 @@ def captures(camera):
     if firstFrame is None:
         firstFrame = gray
     
-    cv2.imshow("output2", gray_original)
+    #cv2.imshow("output2", gray_original)
 
 ##    return gray, frame_original,gray_original
 

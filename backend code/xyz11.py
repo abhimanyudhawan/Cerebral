@@ -17,10 +17,15 @@ import random
 import threading
 from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
+global text_detected, i,t5,t6,er1,er2,frame
+global text_recognised,image_path
+global firstFrame,gray, gray_original, frame, frame_original,t1,t2
+
+firstFrame = None
 
 choices = ["Polaroids and Excitors", "The Fermi Surface", "Ultrasonic Methods in Solid Physics", "Wert and Thomson Physics of solids", "Acoustic fields and waves in solids","Light Scattering in Solids", "Fundamentals of Adhesion and Interactions","ill-condensed matter","Glassy Materials and disordered solids"]
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/home/pi/Downloads/My First Project.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "Cerebral-24ef0ec93035.json"
 """Detects text in the file."""
 client = vision.ImageAnnotatorClient()
 # encoding=utf8
@@ -69,9 +74,9 @@ t6 = threading.Thread()
 ##                                float minArea, float maxArea, float minProbability,
 ##bool nonMaxSuppression, float minProbabilityDiff)
 min_area = 4000
-erc1 = cv2.text.loadClassifierNM1('/home/pi/Documents/project1/trained_classifierNM1.xml')
+erc1 = cv2.text.loadClassifierNM1('trained_classifierNM1.xml')
 er1 = cv2.text.createERFilterNM1(erc1, 90, 0.00015, 0.013, 0.6, True, 0.1)
-erc2 = cv2.text.loadClassifierNM2('/home/pi/Documents/project1/trained_classifierNM2.xml')
+erc2 = cv2.text.loadClassifierNM2('trained_classifierNM2.xml')
 er2 = cv2.text.createERFilterNM2(erc2, 0.8)
 
 motion_detected = False
@@ -80,7 +85,7 @@ text_recognised = False
 
 def start():
     # construct the argument parser and parse the arguments
-    camera = cv2.VideoCapture(0)
+    camera = cv2.VideoCapture("Cerebral.mp4")
     # initialize the first frame in the video stream
     return camera
 
@@ -128,7 +133,10 @@ def motion_detection():
         return True
 
 def captures(camera):
+    global text_detected, i,t5,t6,er1,er2,frame
+    global text_recognised,image_path
     global firstFrame,gray, gray_original, frame, frame_original,t1,t2
+    global firstFrame
     grabbed = 0
     while(grabbed == 0 ):
         (grabbed, frame_original) = camera.read()
@@ -158,6 +166,9 @@ def captures(camera):
 
 def text_detection():
     global text_detected, i,t5,t6,er1,er2,frame
+    global text_recognised,image_path,camera
+    global firstFrame,gray, gray_original, frame, frame_original,t1,t2
+    
     img  = frame
     M = cv2.getRotationMatrix2D((300/2,300/2),90,1)
     img = cv2.warpAffine(img,M,(300,300))
@@ -218,7 +229,9 @@ def text_detection():
                 i=i+1
 
 def text_recognition():
-    global text_recognised,image_path
+    global text_detected, i,t5,t6,er1,er2,frame
+    global text_recognised,image_path,camera
+    global firstFrame,gray, gray_original, frame, frame_original,t1,t2
     if(text_recognised == False):
     
         # [START migration_text_detection]
@@ -250,7 +263,7 @@ if __name__=='__main__':
     camera = start()
     while True:
         if(t0.isAlive()==False):
-            t0 = threading.Thread(target=captures, args=(camera))
+            t0 = threading.Thread(target=captures, args=(camera,))
             t0.start()
                         
         if(text_recognised):
