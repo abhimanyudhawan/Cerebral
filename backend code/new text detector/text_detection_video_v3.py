@@ -9,9 +9,109 @@ import numpy as np
 import argparse
 import imutils
 import time
-import cv2
+import cv2.cv2 as cv2
+from google.cloud import vision
+import os
+import io
+import base64
+import threading
 
 min_Area = 900
+
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "Cerebral-24ef0ec93035.json"
+"""Detects text in the file."""
+client = vision.ImageAnnotatorClient()
+
+# construct the argument parser and parse the arguments
+ap = argparse.ArgumentParser()
+ap.add_argument("-east", "--east", type=str, required=True,
+	help="path to input EAST text detector")
+ap.add_argument("-v", "--video", type=str,
+	help="path to optinal input video file")
+ap.add_argument("-c", "--min-confidence", type=float, default=0.5,
+	help="minimum probability required to inspect a region")
+ap.add_argument("-w", "--width", type=int, default=192,
+	help="resized image width (should be multiple of 32)")
+ap.add_argument("-e", "--height", type=int, default=192,
+	help="resized image height (should be multiple of 32)")
+args = vars(ap.parse_args())
+
+# initialize the original frame dimensions, new frame dimensions,
+# and ratio between the dimensions
+(W, H) = (None, None)
+(newW, newH) = (args["width"], args["height"])
+(rW, rH) = (None, None)
+
+# define the two output layer names for the EAST detector model that
+# we are interested -- the first is the output probabilities and the
+# second can be used to derive the bounding box coordinates of text
+layerNames = [
+	"feature_fusion/Conv_7/Sigmoid",
+	"feature_fusion/concat_3"]
+
+# load the pre-trained EAST text detector
+print("[INFO] loading EAST text detector...")
+net = cv2.dnn.readNet(args["east"])
+
+# if a video path was not supplied, grab the reference to the web cam
+if not args.get("video", False):
+	print("[INFO] starting video stream...")
+	vs = VideoStream(src=0).start()
+	time.sleep(1.0)
+
+# otherwise, grab a reference to the video file
+else:
+	vs = cv2.VideoCapture(args["video"])
+
+# start the FPS throughput estimator
+fps = FPS().start()
+rects_out = []
+confidences_out = []
+
+firstFrame = None
+test_text = "hello"
+frame = np.zeros((newH, newW, 1), dtype = "uint8")
+image_filepath = "test.jpg"
+
+def make_request(frame2):
+	return{
+				"image":{
+	    				"content": image
+	    			},
+				"features": [
+      					{
+      						"type":"TEXT_DETECTION",
+      						"maxResults": 10
+      					}
+      				]
+			}
+	
+def text_recognition_video():
+	response = []	
+	texts = []
+	cv2.imwrite(image_filepath,orig)
+	with io.open(image_filepath, "rb") as imageFile:
+		frame2 = imageFile.read()
+	image = vision.types.Image(content=frame2)
+
+	
+	response = client.text_detection(image = image)
+	texts = response.text_annotations
+	# print (texts)
+	for text in texts:
+		print(format(texts[0].description))
+
+	# body = vision.types.AsyncAnnotateFileRequest() 
+	# body = make_request(frame2)
+	# response = client.async_batch_annotate_files(body)
+	# response.add_done_callback(show_results)
+	# response = client.text_detection(image=image)
+	
+
+	# for text in texts:
+	# 	print(format(texts[0].description))
+
+
 def decode_predictions(scores, geometry):
 	# grab the number of rows and columns from the scores volume, then
 	# initialize our set of bounding box rectangles and corresponding
@@ -87,54 +187,6 @@ def motion_detection(frame):
 				return True
 	return False
 	
-# construct the argument parser and parse the arguments
-ap = argparse.ArgumentParser()
-ap.add_argument("-east", "--east", type=str, required=True,
-	help="path to input EAST text detector")
-ap.add_argument("-v", "--video", type=str,
-	help="path to optinal input video file")
-ap.add_argument("-c", "--min-confidence", type=float, default=0.5,
-	help="minimum probability required to inspect a region")
-ap.add_argument("-w", "--width", type=int, default=192,
-	help="resized image width (should be multiple of 32)")
-ap.add_argument("-e", "--height", type=int, default=192,
-	help="resized image height (should be multiple of 32)")
-args = vars(ap.parse_args())
-
-# initialize the original frame dimensions, new frame dimensions,
-# and ratio between the dimensions
-(W, H) = (None, None)
-(newW, newH) = (args["width"], args["height"])
-(rW, rH) = (None, None)
-
-# define the two output layer names for the EAST detector model that
-# we are interested -- the first is the output probabilities and the
-# second can be used to derive the bounding box coordinates of text
-layerNames = [
-	"feature_fusion/Conv_7/Sigmoid",
-	"feature_fusion/concat_3"]
-
-# load the pre-trained EAST text detector
-print("[INFO] loading EAST text detector...")
-net = cv2.dnn.readNet(args["east"])
-
-# if a video path was not supplied, grab the reference to the web cam
-if not args.get("video", False):
-	print("[INFO] starting video stream...")
-	vs = VideoStream(src=0).start()
-	time.sleep(1.0)
-
-# otherwise, grab a reference to the video file
-else:
-	vs = cv2.VideoCapture(args["video"])
-
-# start the FPS throughput estimator
-fps = FPS().start()
-rects_out = []
-confidences_out = []
-
-firstFrame = None
-test_text = "hello"
 # loop over frames from the video stream
 while True:
 	# grab the current frame, then handle if we are using a
@@ -149,7 +201,6 @@ while True:
 	# resize the frame, maintaining the aspect ratio
 	frame = imutils.resize(frame, width=500)
 	orig = frame.copy()
-
 	# if our frame dimensions are None, we still need to compute the
 	# ratio of old frame dimensions to new frame dimensions
 	if W is None or H is None:
@@ -160,10 +211,9 @@ while True:
 	# resize the frame, this time ignoring aspect ratio
 	frame = cv2.resize(frame, (newW, newH))
 
-
 	##Check for motion
 	if (motion_detection(frame) == True):
-		print ("motion detected")
+		# print ("motion detected")
 		# construct a blob from the frame and then perform a forward pass
 		# of the model to obtain the two output layer sets
 		blob = cv2.dnn.blobFromImage(frame, 1.0, (newW, newH),
@@ -185,16 +235,17 @@ while True:
 			startY = int(startY * rH)
 			endX = int(endX * rW)
 			endY = int(endY * rH)
-
+			t0 = threading.Thread(target=text_recognition_video, args=())
+			t0.start()
 			# draw the bounding box on the frame
-			cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
-		#cv2.imshow("Text Detection", orig)
+			# cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
+		cv2.imshow("Text Detection", orig)
+		# text_recognition_video()
 
 	# update the FPS counter
 	fps.update()
-
 	# show the output frame
-	#cv2.imshow("Actual", frame)
+	# cv2.imshow("Actual", frame)
 	key = cv2.waitKey(1) & 0xFF
 
 	# if the `q` key was pressed, break from the loop
