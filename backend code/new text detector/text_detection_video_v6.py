@@ -17,7 +17,7 @@ import base64
 import threading
 
 min_Area = 900
-
+i=0
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "Cerebral-24ef0ec93035.json"
 """Detects text in the file."""
 client = vision.ImageAnnotatorClient()
@@ -163,6 +163,12 @@ def decode_predictions(scores, geometry):
 			startX = int(endX - w)
 			startY = int(endY - h)
 
+			# increase or decrease size of detection boxes
+			startX = startX - orig.shape[0]/5
+			startY = startY - orig.shape[1]/50
+			endX = endX + orig.shape[0]/5
+			endY = endY + orig.shape[1]/50
+
 			# add the bounding box coordinates and probability score
 			# to our respective lists
 			rects.append((startX, startY, endX, endY))
@@ -237,10 +243,24 @@ while True:
 			startY = int(startY * rH)
 			endX = int(endX * rW)
 			endY = int(endY * rH)
+			# clip coordinates between min and max
+			np.clip(startX,0,orig.shape[1])
+			np.clip(startY,0,orig.shape[0])
+			np.clip(endX,0,orig.shape[1])
+			np.clip(endY,0,orig.shape[0])
+
+			# Select region of interest
+			if(abs(startY-startX)*abs(endX-endY)>10):
+				imcrop = orig[startY: endY ,startX: endX]
+				if(np.size(imcrop)>10):
+					cv2.imshow(str(i),imcrop)
+					i = i+1
+					cv2.destroyWindow(str(i-3))
+
 			# t0 = threading.Thread(target=text_recognition_video, args=())
 			# t0.start()
 			# draw the bounding box on the frame
-			cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
+			# cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
 		cv2.imshow("Text Detection", orig)
 		# text_recognition_video()
 

@@ -3,7 +3,7 @@
 import sys
 import os
 
-import cv2 as cv
+import cv2.cv2 as cv
 import numpy as np
 
 print('\ndetect_er_chars.py')
@@ -12,7 +12,7 @@ print('       Neumann L., Matas J.: Real-Time Scene Text Localization and Recogn
 
 cap = cv.VideoCapture(0)
 
-pathname = "image.png"
+pathname = "final.JPG"
 while(True):
   img  = cv.resize(cap.read()[1],(150,150))
 ##  rows,cols = img.shape
@@ -32,10 +32,10 @@ while(True):
   print("Extracting Class Specific Extremal Regions from "+str(len(channels))+" channels ...")
   print("    (...) this may take a while (...)")
   for channel in channels:
-    erc1 = cv.text.loadClassifierNM1('/home/pi/Documents/project1/trained_classifierNM1.xml')
+    erc1 = cv.text.loadClassifierNM1('trained_classifierNM1.xml')
     er1 = cv.text.createERFilterNM1(erc1,90,0.00015,0.13,0.6,True,0.1)
     
-    erc2 = cv.text.loadClassifierNM2('/home/pi/Documents/project1/trained_classifierNM2.xml')
+    erc2 = cv.text.loadClassifierNM2('trained_classifierNM2.xml')
     er2 = cv.text.createERFilterNM2(erc2,0.8)
 
     regions = cv.text.detectRegions(channel,er1,er2)
@@ -59,4 +59,4 @@ while(True):
   
 # When everything done, release the capture
 cap.release()
-cv2.destroyAllWindows()
+cv.destroyAllWindows()

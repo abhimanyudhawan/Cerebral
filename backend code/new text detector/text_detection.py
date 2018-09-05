@@ -6,7 +6,8 @@ from imutils.object_detection import non_max_suppression
 import numpy as np
 import argparse
 import time
-import cv2
+import cv2.cv2 as cv2
+import math
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
@@ -14,11 +15,11 @@ ap.add_argument("-i", "--image", type=str,
 	help="path to input image")
 ap.add_argument("-east", "--east", type=str,
 	help="path to input EAST text detector")
-ap.add_argument("-c", "--min-confidence", type=float, default=0.5,
+ap.add_argument("-c", "--min-confidence", type=float, default=0.2,
 	help="minimum probability required to inspect a region")
-ap.add_argument("-w", "--width", type=int, default=320,
+ap.add_argument("-w", "--width", type=int, default=192,
 	help="resized image width (should be multiple of 32)")
-ap.add_argument("-e", "--height", type=int, default=320,
+ap.add_argument("-e", "--height", type=int, default=192,
 	help="resized image height (should be multiple of 32)")
 args = vars(ap.parse_args())
 
@@ -27,9 +28,25 @@ image = cv2.imread(args["image"])
 orig = image.copy()
 (H, W) = image.shape[:2]
 
+##to round down to nearest multiple
+def round_down(num, divisor):
+    return num - (num%divisor)
+
+##to round up to nearest multiple
+def round_up(num, divisor):
+    return num + (divisor-(num%divisor))
+
 # set the new width and height and then determine the ratio in change
 # for both the width and height
+
+# old formula:
 (newW, newH) = (args["width"], args["height"])
+
+# my formula: 
+newW = int(round_down((math.sqrt(W))*8,32)+32)
+newH = int(round_down((math.sqrt(H))*8,32)+32)
+# print(newW, newH)
+
 rW = W / float(newW)
 rH = H / float(newH)
 
@@ -37,6 +54,7 @@ rH = H / float(newH)
 image = cv2.resize(image, (newW, newH))
 (H, W) = image.shape[:2]
 
+print(H,W)
 # define the two output layer names for the EAST detector model that
 # we are interested -- the first is the output probabilities and the
 # second can be used to derive the bounding box coordinates of text
@@ -87,7 +105,7 @@ for y in range(0, numRows):
 
 		# compute the offset factor as our resulting feature maps will
 		# be 4x smaller than the input image
-		(offsetX, offsetY) = (x * 4.0, y * 4.0)
+		(offsetX, offsetY) = (x * 4, y * 4)
 
 		# extract the rotation angle for the prediction and then
 		# compute the sin and cosine
@@ -107,15 +125,24 @@ for y in range(0, numRows):
 		startX = int(endX - w)
 		startY = int(endY - h)
 
-		# add the bounding box coordinates and probability score to
+		# old add the bounding box coordinates and probability score to
 		# our respective lists
+		# rects.append((startX, startY, endX, endY))
+		# new bounding box
+		x_offset = W/10
+		y_offset = H/30
+		startY = startY - startY/y_offset
+		endX = endX + endX/x_offset
+		endY = endY +endY/y_offset
 		rects.append((startX, startY, endX, endY))
+		# rects.append((startX, startY - startY/y_offset, endX + endX/x_offset, endY +endY/y_offset))
 		confidences.append(scoresData[x])
 
 # apply non-maxima suppression to suppress weak, overlapping bounding
 # boxes
-boxes = non_max_suppression(np.array(rects), probs=confidences)
+boxes = non_max_suppression(np.array(rects), probs=confidences,overlapThresh=0.08)
 
+i=0
 # loop over the bounding boxes
 for (startX, startY, endX, endY) in boxes:
 	# scale the bounding box coordinates based on the respective
@@ -124,9 +151,19 @@ for (startX, startY, endX, endY) in boxes:
 	startY = int(startY * rH)
 	endX = int(endX * rW)
 	endY = int(endY * rH)
+	
+	np.clip(startX,0,orig.shape[1])
+	np.clip(startY,0,orig.shape[0])
+	np.clip(endX,0,orig.shape[1])
+	np.clip(endY,0,orig.shape[0])
 
 	# draw the bounding box on the image
 	cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
+
+	# Select region of interest
+	imcrop = orig[startY: endY ,startX: endX]
+	cv2.imshow(str(i),imcrop)
+	i = i+1
 
 # show the output image
 cv2.imshow("Text Detection", orig)

@@ -237,10 +237,10 @@ while True:
 			startY = int(startY * rH)
 			endX = int(endX * rW)
 			endY = int(endY * rH)
-			# t0 = threading.Thread(target=text_recognition_video, args=())
-			# t0.start()
+			t0 = threading.Thread(target=text_recognition_video, args=())
+			t0.start()
 			# draw the bounding box on the frame
-			cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
+			# cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
 		cv2.imshow("Text Detection", orig)
 		# text_recognition_video()
 

@@ -10,13 +10,16 @@ import argparse
 import imutils
 import time
 import cv2.cv2 as cv2
+# Imports the Google Cloud client library
 from google.cloud import vision
 import os
 import io
 import base64
 import threading
+import math
 
-min_Area = 900
+min_Area = 2000
+i=0
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "Cerebral-24ef0ec93035.json"
 """Detects text in the file."""
@@ -68,9 +71,27 @@ fps = FPS().start()
 rects_out = []
 confidences_out = []
 
+# initialize the frames
+frame = vs.read()
+frame = frame[1] if args.get("video", False) else frame
+(H, W) = frame.shape[:2]
+
+##to round down to nearest multiple
+def round_down(num, divisor):
+    return num - (num%divisor)
+
+##to round up to nearest multiple
+def round_up(num, divisor):
+    return num + (divisor-(num%divisor))
+
+# my formula: 
+newW = int(round_down((math.sqrt(W))*8,32)+32)
+newH = int(round_down((math.sqrt(H))*8,32)+32)
+
+rW = W / float(newW)
+rH = H / float(newH)
+
 firstFrame = None
-test_text = "hello"
-frame = np.zeros((newH, newW, 1), dtype = "uint8")
 image_filepath = "test.jpg"
 
 def make_request(frame2):
@@ -163,9 +184,20 @@ def decode_predictions(scores, geometry):
 			startX = int(endX - w)
 			startY = int(endY - h)
 
-			# add the bounding box coordinates and probability score
+			# old add the bounding box coordinates and probability score
 			# to our respective lists
+			# rects.append((startX, startY, endX, endY))
+
+			# new add the bounding box coordinates and probability score
+			# to our respective lists
+			x_offset = orig.shape[0]*0.5
+			y_offset = orig.shape[1]/10
+			# startY = startY - orig.shape[1]/1000
+			# endX = endX + orig.shape[0]/5
+			# endY = endY + orig.shape[1]/1000
 			rects.append((startX, startY, endX, endY))
+
+			# rects.append((startX, startY - startY/y_offset, endX + endX/x_offset, endY +endY/y_offset))
 			confidences.append(scoresData[x])
 
 	# return a tuple of the bounding boxes and associated confidences
@@ -180,7 +212,7 @@ def motion_detection(frame):
 		print("firstFrame assigned gray")
 	else:
 		frameDelta = cv2.absdiff(firstFrame,gray)
-		thresh = cv2.threshold(frameDelta,90,255,cv2.THRESH_BINARY)[1]
+		thresh = cv2.threshold(frameDelta,120,255,cv2.THRESH_BINARY)[1]
 		thresh = cv2.dilate(thresh, None, iterations =1)
 		(_,cnts,_) = cv2.findContours(thresh.copy(),cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 		for c in cnts:
@@ -237,11 +269,25 @@ while True:
 			startY = int(startY * rH)
 			endX = int(endX * rW)
 			endY = int(endY * rH)
-			# t0 = threading.Thread(target=text_recognition_video, args=())
-			# t0.start()
+			np.clip(startX,0,orig.shape[1])
+			np.clip(startY,0,orig.shape[0])
+			np.clip(endX,0,orig.shape[1])
+			np.clip(endY,0,orig.shape[0])
+
 			# draw the bounding box on the frame
 			cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
+
+			# Select region of interest
+			# if(abs(startY-startX)*abs(endX-endY)>10):
+			# 	imcrop = orig[startY: endY ,startX: endX]
+			# 	if(np.size(imcrop)>10):
+			# 		cv2.imshow(str(i),imcrop)
+			# 		i = i+1
+			# 		cv2.destroyWindow(str(i-3))
+			# t0 = threading.Thread(target=text_recognition_video, args=())
+			# t0.start()
 		cv2.imshow("Text Detection", orig)
+		
 		# text_recognition_video()
 
 	# update the FPS counter
