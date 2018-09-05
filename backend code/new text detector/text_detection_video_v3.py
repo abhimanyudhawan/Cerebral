@@ -74,6 +74,7 @@ frame = np.zeros((newH, newW, 1), dtype = "uint8")
 image_filepath = "test.jpg"
 
 def make_request(frame2):
+	frame2.read()
 	return{
 				"image":{
 	    				"content": image
@@ -92,6 +93,7 @@ def text_recognition_video():
 	cv2.imwrite(image_filepath,orig)
 	with io.open(image_filepath, "rb") as imageFile:
 		frame2 = imageFile.read()
+		
 	image = vision.types.Image(content=frame2)
 
 	
