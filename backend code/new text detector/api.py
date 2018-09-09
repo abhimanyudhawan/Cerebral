@@ -30,9 +30,9 @@ def scan_process():
 
             res = {
                 "error" : {
-                    "status" : True
+                    "status" : False
                 },
-                "response" : 1
+                "response" : boxes
             }
 
         except Exception as e:
@@ -42,7 +42,7 @@ def scan_process():
 
             res = {
                 "error" : {
-                    "status" : False,
+                    "status" : True,
                     "message" : str(e)
                 }
             }
