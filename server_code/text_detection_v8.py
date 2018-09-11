@@ -206,7 +206,7 @@ def crop_save(frame, boxes):
 						# imcrop2 = cv2.adaptiveThreshold(imcrop2,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,13,6)
 						# # imcrop2 = cv2.threshold(imcrop2, 0, 255, cv2.THRESH_OTSU)[1]
 						
-						cv2.imwrite(save_file_path + "\\" + str(i)+".png",imcrop)
+						cv2.imwrite(save_file_path + "\/" + str(i)+".png",imcrop)
 						i = i+1
 						# t0 = threading.Thread(target=text_recognition_video, args=())
 						# t0.start()	
