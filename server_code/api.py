@@ -15,6 +15,7 @@ adjustment_factor_y = 0.6
 
 @app.route('/scan',methods=['POST'])
 def scan_process():
+    global min_confidence,min_area,adjustment_factor_x,adjustment_factor_y
     if request.method == 'POST':
         data = ast.literal_eval(request.data)
         encoded_byte   = data['encoded_byte']
