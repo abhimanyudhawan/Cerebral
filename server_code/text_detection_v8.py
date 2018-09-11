@@ -243,9 +243,9 @@ def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area
 		(rects, confidences) = decode_predictions(scores, geometry)
 		
 		boxes = non_max_suppression(np.array(rects), probs=confidences)	
+		if(np.size(boxes)>1):
+			crop_save(frame,boxes)
 
-		crop_save(frame,boxes)
-
-		return(resized_boxes(boxes))
+			return(resized_boxes(boxes))
 
 	return []

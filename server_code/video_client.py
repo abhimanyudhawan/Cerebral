@@ -15,7 +15,7 @@ import os
 import io
 import base64
 import threading
-import text_detection_video_v8
+import text_detection_v8
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
@@ -31,9 +31,9 @@ ap.add_argument("-e", "--height", type=int, default=192,
 	help="resized image height (should be multiple of 32)")
 args = vars(ap.parse_args())
 
-min_area = 200
-adjustment_factor_x = 0.8
-adjustment_factor_y = 0.02
+min_area = 30
+adjustment_factor_x = 0.3
+adjustment_factor_y = 0.6
 
 # initialize the original frame dimensions, new frame dimensions,
 # and ratio between the dimensions
@@ -69,7 +69,7 @@ while True:
 		break
 
 	# resize the frame, maintaining the aspect ratio
-	frame = imutils.resize(frame, width=500)
+	frame = imutils.resize(frame, width=300)
 	orig = frame.copy()
 	# if our frame dimensions are None, we still need to compute the
 	# ratio of old frame dimensions to new frame dimensions
@@ -84,11 +84,11 @@ while True:
 	# encoding image to base64 format
 	_,encoded_image =cv2.imencode('.jpg',frame)
 	encoded_byte = base64.b64encode(encoded_image)
-	f = open('new_text2.txt','wb')
-	f.write(encoded_byte)
+	# f = open('new_text2.txt','wb')
+	# f.write(encoded_byte)
 
 	## Calling the actual API
-	boxes = text_detection_video_v8.imageProcessor(encoded_byte, args["min_confidence"], 
+	boxes = text_detection_v8.imageProcessor(encoded_byte, args["min_confidence"], 
 													min_area, adjustment_factor_x, adjustment_factor_y)
     
     # loop over the bounding boxes
