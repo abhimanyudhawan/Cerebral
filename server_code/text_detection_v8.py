@@ -197,7 +197,7 @@ def crop_save(frame, boxes):
 	global i
 	for (startX, startY, endX, endY) in boxes:
 			if(abs(startY-startX)*abs(endX-endY)>10):
-					print(startX, startY, endX, endY)
+					# print(startX, startY, endX, endY)
 					imcrop = frame[startY: endY ,startX: endX]
 
 					if(np.size(imcrop)>10):
@@ -231,9 +231,10 @@ def imageProcessor(encoded, min_confidence = min_Confidence,min_area = min_Area,
 
 	# resizing frame
 	frame = resize_frame(frame)
-
+	print(min_Confidence)
+	print(i)
 	## Check for motion
-	if (motion_detection(frame) == True):
+	if (motion_detection(frame) == True or min_area==0):
 		# print ("motion detected")
 		
 		(scores, geometry) = text_detection(frame)
