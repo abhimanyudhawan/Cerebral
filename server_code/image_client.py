@@ -12,9 +12,13 @@ orig = frame.copy()
 
 _,encoded_image =cv2.imencode('.jpg',frame)
 encoded_byte = (base64.b64encode(encoded_image))
+f = open('new_text2.txt','wb')
+f.write(encoded_byte)
+f.close()
 
 boxes = text_detection_v8.imageProcessor(encoded_byte, 0.999, 0)
-boxes = text_detection_v8.imageProcessor(encoded_byte, 0.98, 0)
+print(len(boxes))
+# boxes = text_detection_v8.imageProcessor(encoded_byte, 0.98, 0)
 # loop over the bounding boxes
 if(np.shape(boxes)!=None):
     # print (boxes)

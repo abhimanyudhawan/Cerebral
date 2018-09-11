@@ -9,7 +9,7 @@ import text_detection_v8
 app = Flask(__name__)
 
 min_confidence = 0.2
-min_area = 200
+min_area = 0
 adjustment_factor_x = 0.3
 adjustment_factor_y = 0.6
 
@@ -18,26 +18,29 @@ def scan_process():
     if request.method == 'POST':
         data = ast.literal_eval(request.data)
         encoded_byte   = data['encoded_byte']
-        if(data['min_confidence']):
-            min_confidence = data['min_confidence']
-        if(data['min_area']):
-            min_area       = data['min_area']
-        if(data['adjustment_factor_x']):
-            adjustment_factor_x = data['adjustment_factor_x']
-        if(data['adjustment_factor_y']):
-            adjustment_factor_y = data['adjustment_factor_y']
+        if('min_confidence' in data):
+            min_confidence = float(data['min_confidence'])
+        if('min_area' in data):
+            min_area       = float(data['min_area'])
+        if('adjustment_factor_x' in data):
+            adjustment_factor_x = float(data['adjustment_factor_x'])
+        if('adjustment_factor_y' in data):
+            adjustment_factor_y = float(data['adjustment_factor_y'])
 
         try:
             boxes = text_detection_v8.imageProcessor(encoded_byte, min_confidence, min_area, adjustment_factor_x, adjustment_factor_y)
             
             # boxes = text_detection_v8.imageProcessor(encoded_byte, 0.2, 200, 0.2, 0.02)
-            
+            if(len(boxes)>0):
+                output = boxes.tolist()
+            else: 
+                output = boxes
 
             res = {
                 "error" : {
                     "status" : False
                 },
-                "response" : boxes
+                "response" : output
             }
 
         except Exception as e:
