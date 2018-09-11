@@ -7,7 +7,7 @@ import imutils
 frame = cv2.imread('new_book.jpg')
 
 # resize the frame, maintaining the aspect ratio
-frame = imutils.resize(frame, width=500)
+frame = imutils.resize(frame, width=300)
 orig = frame.copy()
 
 _,encoded_image =cv2.imencode('.jpg',frame)

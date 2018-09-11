@@ -219,7 +219,7 @@ def resized_boxes(boxes):
 	return boxes.astype(int)
 
 # Main Algorithm
-def imageProcessor(encoded, min_confidence = min_Confidence,min_area = min_Area, adjustment_factor_x = adjustment_Factor_x,adjustment_factor_y = adjustment_Factor_y):
+def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area, adjustment_factor_x = adjustment_Factor_x, adjustment_factor_y = adjustment_Factor_y):
 	global frame,i, min_Area, min_Confidence, adjustment_Factor_x, adjustment_Factor_y
 	adjustment_Factor_x = adjustment_factor_x
 	adjustment_Factor_y = adjustment_factor_y
@@ -231,8 +231,7 @@ def imageProcessor(encoded, min_confidence = min_Confidence,min_area = min_Area,
 
 	# resizing frame
 	frame = resize_frame(frame)
-	print(min_Confidence)
-	print(i)
+	
 	## Check for motion
 	if (motion_detection(frame) == True or min_area==0):
 		# print ("motion detected")
