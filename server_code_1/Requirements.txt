@@ -1,5 +1,0 @@
-pip install imutils
-pip install google-cloud
-pip install numpy
-pip install opencv-python
-pip install opencv-contrib-python
