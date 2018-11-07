@@ -1,5 +1,3 @@
-# USAGE
-# python text_detection_video.py --east frozen_east_text_detection.pb --video Cerebral.mp4
 
 # import the necessary packages
 from imutils.video import VideoStream
@@ -61,21 +59,20 @@ def make_request(frame2):
       				]
 			}
 	
-def text_recognition_video():
+def text_recognition_video(frame):
 	response = []	
 	texts = []
-	cv2.imwrite(image_filepath,orig)
-	with io.open(image_filepath, "rb") as imageFile:
-		frame2 = imageFile.read()
-		
+	# cv2.imwrite(save_file_path + "//"+"cropped.png",frame)
+	frame2 = cv2.imencode(".jpg",frame)[1].tostring()		
 	image = vision.types.Image(content=frame2)
-
 	
 	response = client.text_detection(image = image)
 	texts = response.text_annotations
-	# print (texts)
+	
 	for text in texts:
 		print(format(texts[0].description))
+
+	return texts
 
 	# body = vision.types.AsyncAnnotateFileRequest() 
 	# body = make_request(frame2)
@@ -92,7 +89,11 @@ def decode_predictions(scores, geometry):
 	# grab the number of rows and columns from the scores volume, then
 	# initialize our set of bounding box rectangles and corresponding
 	# confidence scores
+	# print(scores[0][0][0][0])
+	# print("---")
+	
 	(numRows, numCols) = scores.shape[2:4]
+	(numRows2,numCols2)= geometry.shape[2:4]
 	rects = []
 	confidences = []
 	
@@ -102,6 +103,7 @@ def decode_predictions(scores, geometry):
 		# geometrical data used to derive potential bounding box
 		# coordinates that surround text
 		scoresData = scores[0, 0, y]
+		
 		xData0 = geometry[0, 0, y]
 		xData1 = geometry[0, 1, y]
 		xData2 = geometry[0, 2, y]
@@ -206,10 +208,10 @@ def crop_save(frame, boxes):
 						# imcrop2 = cv2.adaptiveThreshold(imcrop2,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,13,6)
 						# # imcrop2 = cv2.threshold(imcrop2, 0, 255, cv2.THRESH_OTSU)[1]
 						
-						cv2.imwrite(save_file_path + "//" + str(i)+".png",imcrop)
-						i = i+1
-						# t0 = threading.Thread(target=text_recognition_video, args=())
-						# t0.start()	
+						# cv2.imwrite(save_file_path + "//" + str(i)+".png",imcrop)
+						# i = i+1
+						t0 = threading.Thread(target=text_recognition_video, args=(imcrop,))
+						t0.start()	
 
 def resized_boxes(boxes):
 	boxes[:,0] = boxes[:,0] * rW

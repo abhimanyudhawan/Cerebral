@@ -1,5 +1,5 @@
 # USAGE
-# python client.py --video Cerebral.mp4
+# python video_client.py --video Cerebral.mp4
 
 # import the necessary packages
 from imutils.video import VideoStream
@@ -15,7 +15,7 @@ import os
 import io
 import base64
 import threading
-import text_detection_v8
+import text_detection_v10
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
@@ -31,7 +31,7 @@ ap.add_argument("-e", "--height", type=int, default=192,
 	help="resized image height (should be multiple of 32)")
 args = vars(ap.parse_args())
 
-min_area = 30
+min_area = 1000
 adjustment_factor_x = 0.3
 adjustment_factor_y = 0.6
 
@@ -88,7 +88,7 @@ while True:
 	# f.write(encoded_byte)
 
 	## Calling the actual API
-	boxes = text_detection_v8.imageProcessor(encoded_byte, args["min_confidence"], 
+	boxes = text_detection_v10.imageProcessor(encoded_byte, args["min_confidence"], 
 													min_area, adjustment_factor_x, adjustment_factor_y)
     
     # loop over the bounding boxes
