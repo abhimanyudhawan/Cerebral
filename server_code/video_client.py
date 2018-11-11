@@ -32,8 +32,8 @@ ap.add_argument("-e", "--height", type=int, default=192,
 args = vars(ap.parse_args())
 
 min_area = 1000
-adjustment_factor_x = 0.3
-adjustment_factor_y = 0.6
+adjustment_factor_x = 0.1
+adjustment_factor_y = 0.1
 
 # initialize the original frame dimensions, new frame dimensions,
 # and ratio between the dimensions
@@ -89,7 +89,7 @@ while True:
 
 	## Calling the actual API
 	boxes = text_detection_v10.imageProcessor(encoded_byte, args["min_confidence"], 
-													min_area, adjustment_factor_x, adjustment_factor_y)
+													min_area, adjustment_factor_x, adjustment_factor_y, authorization_token='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRhIjoiNWJkZjRhNmJiZDg3ZjMxY2U5MDdiMmMzX180NTk2NzciLCJpYXQiOjE1NDE4MjA2ODgsImV4cCI6MTU0NDQxMjY4OH0.TdOPISz-FEFHePwp-UetWnda6_6Xo2Iv6drJVp8rlz4')
     
     # loop over the bounding boxes
 	if(np.shape(boxes)!=None):

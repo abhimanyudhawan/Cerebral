@@ -23,6 +23,10 @@ min_Confidence = 0.2
 adjustment_Factor_x = 0.3
 adjustment_Factor_y = 0.6
 offline_Detection = False
+x_Coordinate = 0 
+y_Coordinate = 0
+z_Coordinate = 0
+authorization_Token = '0'
 i=0
 
 save_file_path = "extracted_images"
@@ -61,42 +65,33 @@ def make_request(frame2):
       				]
 			}
 	
-def text_recognition_video(frame):
+def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, authorization_token):
 	response = []	
 	texts = []
 	# cv2.imwrite(save_file_path + "//"+"cropped.png",frame)
 	frame2 = cv2.imencode(".jpg",frame)[1].tostring()		
 	image = vision.types.Image(content=frame2)
-	
+
 	response = client.text_detection(image = image)
 	texts = response.text_annotations
-	code = "RC438 .B85 1989"
-	for text in texts:
-		print(format(texts[0].description))
-		headers = {'Content-Type': "application/json",'authorization': "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRhIjoiNWJkZjRhNmJiZDg3ZjMxY2U5MDdiMmMzX185MzU2MjkiLCJpYXQiOjE1NDE1NjE2MjcsImV4cCI6MTU0NDE1MzYyN30.Bhx7qvdTw_22EBk4urSOadrFuT4Hl0P9WvjiODYkKfM"}
-		payload = {"id" : "5bdf4a6bbd87f31ce907b2c3",
-					"code" : code,
-					"isCodeTypeLCClassification" : "true",
-					"limit" : 10,
-					"xCordinate" : "10",
-					"yCordinate" : "20",
-					"zCordinate" : "30"}
-		response = requests.request("POST", url, data=json.dumps(payload), headers=headers)
-		print(response.text.encode("utf-8"))
+	if(len(texts)>0):
+		if(texts[0].description is not None):
+			code = texts[0].description.replace("\n", " ")
+			# print(code)
+			headers = {'Content-Type': "application/json",'authorization': "Bearer "+ authorization_token}
+			payload = {"id" : "5bdf4a6bbd87f31ce907b2c3",
+						"code" : code,
+						"isCodeTypeLCClassification" : "true",
+						"limit" : 10,
+						"xCordinate" : x_coordinate,
+						"yCordinate" : y_coordinate,
+						"zCordinate" : z_coordinate}
+			response = requests.request("POST", url, data=json.dumps(payload), headers=headers)
+			# print(response.text.encode("utf-8"))
 	return texts
 
-	# body = vision.types.AsyncAnnotateFileRequest() 
-	# body = make_request(frame2)
-	# response = client.async_batch_annotate_files(body)
-	# response.add_done_callback(show_results)
-	# response = client.text_detection(image=image)
-	
 
-	# for text in texts:
-	# 	print(format(texts[0].description))
-
-
-def decode_predictions(scores, geometry):
+def decode_predictions(scores, geometry,frame):
 	# grab the number of rows and columns from the scores volume, then
 	# initialize our set of bounding box rectangles and corresponding
 	# confidence scores
@@ -149,7 +144,7 @@ def decode_predictions(scores, geometry):
 			startX = int(endX - w)
 			startY = int(endY - h)
 
-			# increase or decrease size of detection boxes
+			# # increase or decrease size of detection boxes
 			startX = startX - int(numCols*adjustment_Factor_x)
 			startY = startY - int(numRows*adjustment_Factor_y)
 			endX = endX + int(numCols*adjustment_Factor_x)
@@ -157,6 +152,11 @@ def decode_predictions(scores, geometry):
 
 			# add the bounding box coordinates and probability score
 			# to our respective lists
+			startX = max(startX,0)
+			endX = min(endX,np.shape(frame)[0])
+			startY = max(startY,0)
+			endY = min(endY,np.shape(frame)[1])
+				
 			rects.append((startX, startY, endX, endY))
 			confidences.append(scoresData[x])
 
@@ -169,7 +169,7 @@ def motion_detection(frame):
 	gray = cv2.GaussianBlur(gray,(21,21),0)
 	if firstFrame is None:
 		firstFrame = gray.copy()
-		print("firstFrame assigned gray")
+		# print("firstFrame assigned gray")
 	else:
 		frameDelta = cv2.absdiff(firstFrame,gray)
 		thresh = cv2.threshold(frameDelta,90,255,cv2.THRESH_BINARY)[1]
@@ -197,32 +197,31 @@ def decode_frame(encoded):
 def resize_frame(frame):
 	global rW,rH
 	(H, W) = frame.shape[:2]
-	newW = 320
-	newH = 320
+	newH = H - H%32
+	newW = W - W%32
 	rW = W / float(newW)
 	rH = H / float(newH)
 
 	# resize the image and grab the new image dimensions
 	return(cv2.resize(frame, (newW, newH)))
 
-def crop_save(frame, boxes):
-	global i
-	for (startX, startY, endX, endY) in boxes:
-			if(abs(startY-startX)*abs(endX-endY)>10):
-					# print(startX, startY, endX, endY)
-					imcrop = frame[startY: endY ,startX: endX]
+def crop_save(frame, boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token):
+	# thread_number = 0
+	new_boxes = []
+	output = frame.copy()
 
-					if(np.size(imcrop)>10):
-						# imcrop2 = cv2.resize(imcrop, (0,0), fx=5, fy=5)
-						# imcrop2 = cv2.cvtColor(imcrop2,cv2.COLOR_BGR2GRAY)
-						# imcrop2 = cv2.adaptiveThreshold(imcrop2,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,13,6)
-						# # imcrop2 = cv2.threshold(imcrop2, 0, 255, cv2.THRESH_OTSU)[1]
-						
-						# cv2.imwrite(save_file_path + "//" + str(i)+".png",imcrop)
-						# i = i+1
-						t0 = threading.Thread(target=text_recognition_video, args=(imcrop,))
-						t0.start()
-						return imcrop	
+	for (startX, startY, endX, endY) in boxes:
+		if(abs(startY-startX)*abs(endX-endY)>1):		
+			imcrop = frame[startY: endY ,startX: endX]
+			if(np.size(imcrop)>1):
+				# thread_number = thread_number + 1
+				# cv2.imwrite("output" + str(thread_number) + ".jpg",imcrop)
+
+				cv2.rectangle(output, (startX, startY), (endX, endY), (0, 255, 0), 2)
+				new_boxes.append(np.array([startX,startY,endX,endY]))
+				threading.Thread(target=text_recognition_video, args=(imcrop, x_coordinate, y_coordinate, z_coordinate, authorization_token)).start()
+	cv2.imshow("output", output)
+	return np.asarray(new_boxes)
 
 def resized_boxes(boxes):
 	boxes[:,0] = boxes[:,0] * rW
@@ -232,13 +231,14 @@ def resized_boxes(boxes):
 	return boxes.astype(int)
 
 # Main Algorithm
-def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area, adjustment_factor_x = adjustment_Factor_x, adjustment_factor_y = adjustment_Factor_y, offline_detection = offline_Detection):
+def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area, adjustment_factor_x = adjustment_Factor_x, adjustment_factor_y = adjustment_Factor_y, offline_detection = offline_Detection, x_coordinate = x_Coordinate, y_coordinate = x_Coordinate, z_coordinate = z_Coordinate, authorization_token = authorization_Token ):
 	global frame,i, min_Area, min_Confidence, adjustment_Factor_x, adjustment_Factor_y
 	adjustment_Factor_x = adjustment_factor_x
 	adjustment_Factor_y = adjustment_factor_y
 	min_Area= min_area
 	min_Confidence = min_confidence
 	offline_Detection = offline_detection
+	
 	# Decoding frame
 	frame = decode_frame(encoded)
 
@@ -254,15 +254,13 @@ def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area
 
 			# decode the predictions, then  apply non-maxima suppression to
 			# suppress weak, overlapping bounding boxes
-			(rects, confidences) = decode_predictions(scores, geometry)
+			(rects, confidences) = decode_predictions(scores, geometry,frame)
 			
 			boxes = non_max_suppression(np.array(rects), probs=confidences)	
 			if(np.size(boxes)>1):
-				crop_save(frame,boxes)
-
+				boxes = crop_save(frame,boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token)
 				return(resized_boxes(boxes))
 	else:
-		t0 = threading.Thread(target=text_recognition_video, args=(frame,))
-		t0.start()
-	
+		threading.Thread(target=text_recognition_video, args=(frame, x_coordinate, y_coordinate, z_coordinate, authorization_token)).start()
+		
 	return []
