@@ -20,7 +20,7 @@ authorization_token = '0'
 
 @app.route('/scan',methods=['POST'])
 def scan_process():
-    global min_confidence,min_area,adjustment_factor_x,adjustment_factor_y
+    global min_confidence,min_area,adjustment_factor_x,adjustment_factor_y,offline_detection,x_coordinate,y_coordinate,z_coordinate,authorization_token
     if request.method == 'POST':
         data = ast.literal_eval(request.data)
         authorization_token = request.headers.get('Authorization')
@@ -34,7 +34,7 @@ def scan_process():
         if('adjustment_factor_y' in data):
             adjustment_factor_y = float(data['adjustment_factor_y'])
         if('offline_detection' in data):
-            offline_detection = float(data['offline_detection'])
+            offline_detection = data['offline_detection']
         if('x_coordinate' in data):
             x_coordinate = float(data['x_coordinate'])
         if('y_coordinate' in data):

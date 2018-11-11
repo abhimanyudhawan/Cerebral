@@ -76,7 +76,7 @@ def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, auth
 		if(texts[0].description is not None):
 			code = texts[0].description.replace("\n", " ")
 			# print(code)
-			headers = {'Content-Type': "application/json",'authorization': "Bearer "+ authorization_token}
+			headers = {'Content-Type': "application/json",'authorization': "Bearer "+ str(authorization_token)}
 			payload = {"id" : "5bdf4a6bbd87f31ce907b2c3",
 						"code" : code,
 						"isCodeTypeLCClassification" : "true",
@@ -221,20 +221,22 @@ def crop_save(frame, boxes, x_coordinate, y_coordinate, z_coordinate, authorizat
 	return np.asarray(new_boxes)
 
 def resized_boxes(boxes,rW,rH):
-	boxes[:,0] = boxes[:,0] * rW
-	boxes[:,1] = boxes[:,1] * rH
-	boxes[:,2] = boxes[:,2] * rW
-	boxes[:,3] = boxes[:,3] * rH
-	return boxes.astype(int)
+	if(len(np.shape(boxes))==2):
+		boxes[:,0] = boxes[:,0] * rW
+		boxes[:,1] = boxes[:,1] * rH
+		boxes[:,2] = boxes[:,2] * rW
+		boxes[:,3] = boxes[:,3] * rH
+		return boxes.astype(int)
+	return []
 
 # Main Algorithm
 def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area, adjustment_factor_x = adjustment_Factor_x, adjustment_factor_y = adjustment_Factor_y, offline_detection = offline_Detection, x_coordinate = x_Coordinate, y_coordinate = x_Coordinate, z_coordinate = z_Coordinate, authorization_token = authorization_Token ):
 	global firstFrame
 	if(len(firstFrame)>100):
 		firstFrame = {}
+	boxes = []
 	# Decoding frame
 	frame = decode_frame(encoded)
-
 	# resizing frame
 	frame, rW, rH = resize_frame(frame)
 	
@@ -252,8 +254,7 @@ def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area
 			boxes = non_max_suppression(np.array(rects), probs=confidences)	
 			if(np.size(boxes)>1):
 				boxes = crop_save(frame,boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token)
-				return(resized_boxes(boxes,rW,rH))
 	else:
 		threading.Thread(target=text_recognition_video, args=(frame, x_coordinate, y_coordinate, z_coordinate, authorization_token)).start()
 		
-	return []
+	return resized_boxes(boxes,rW,rH)
