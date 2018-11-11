@@ -27,7 +27,6 @@ x_Coordinate = 0
 y_Coordinate = 0
 z_Coordinate = 0
 authorization_Token = '0'
-i=0
 
 save_file_path = "extracted_images"
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "Cerebral-24ef0ec93035.json"
@@ -42,14 +41,13 @@ layerNames = [
 	"feature_fusion/concat_3"]
 
 # load the pre-trained EAST text detector
-print("[INFO] loading EAST text detector...")
+# print("[INFO] loading EAST text detector...")
 net = cv2.dnn.readNet("frozen_east_text_detection.pb")
 
 # start the FPS throughput estimator
 fps = FPS().start()
 
-firstFrame = None
-frame = None
+firstFrame = {}
 
 def make_request(frame2):
 	frame2.read()
@@ -91,7 +89,7 @@ def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, auth
 	return texts
 
 
-def decode_predictions(scores, geometry,frame):
+def decode_predictions(scores, geometry,frame,adjustment_factor_x,adjustment_factor_y,min_confidence):
 	# grab the number of rows and columns from the scores volume, then
 	# initialize our set of bounding box rectangles and corresponding
 	# confidence scores
@@ -119,7 +117,7 @@ def decode_predictions(scores, geometry,frame):
 		for x in range(0, numCols):
 			# if our score does not have sufficient probability,
 			# ignore it
-			if scoresData[x] < min_Confidence:
+			if scoresData[x] < min_confidence:
 				continue
 
 			# compute the offset factor as our resulting feature
@@ -145,10 +143,10 @@ def decode_predictions(scores, geometry,frame):
 			startY = int(endY - h)
 
 			# # increase or decrease size of detection boxes
-			startX = startX - int(numCols*adjustment_Factor_x)
-			startY = startY - int(numRows*adjustment_Factor_y)
-			endX = endX + int(numCols*adjustment_Factor_x)
-			endY = endY + int(numRows*adjustment_Factor_y)
+			startX = startX - int(numCols*adjustment_factor_x)
+			startY = startY - int(numRows*adjustment_factor_y)
+			endX = endX + int(numCols*adjustment_factor_x)
+			endY = endY + int(numRows*adjustment_factor_y)
 
 			# add the bounding box coordinates and probability score
 			# to our respective lists
@@ -163,21 +161,22 @@ def decode_predictions(scores, geometry,frame):
 	# return a tuple of the bounding boxes and associated confidences
 	return (rects, confidences)
 
-def motion_detection(frame):
+def motion_detection(frame,min_area, authorization_token):
 	global firstFrame
 	gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
 	gray = cv2.GaussianBlur(gray,(21,21),0)
-	if firstFrame is None:
-		firstFrame = gray.copy()
-		# print("firstFrame assigned gray")
+	if authorization_token not in firstFrame:
+		firstFrame[authorization_token] = gray.copy()
+		print("firstFrame assigned gray")
+		return True		
 	else:
-		frameDelta = cv2.absdiff(firstFrame,gray)
+		frameDelta = cv2.absdiff(firstFrame[authorization_token],gray)
 		thresh = cv2.threshold(frameDelta,90,255,cv2.THRESH_BINARY)[1]
 		thresh = cv2.dilate(thresh, None, iterations =1)
 		(_,cnts,_) = cv2.findContours(thresh.copy(),cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 		for c in cnts:
-			if cv2.contourArea(c)>min_Area:
-				firstFrame = gray.copy()
+			if cv2.contourArea(c)>min_area:
+				firstFrame[authorization_token] = gray.copy()
 				return True
 	return False
 
@@ -195,7 +194,6 @@ def decode_frame(encoded):
 	return(cv2.imdecode(decoded, flags=1))
 
 def resize_frame(frame):
-	global rW,rH
 	(H, W) = frame.shape[:2]
 	newH = H - H%32
 	newW = W - W%32
@@ -203,7 +201,7 @@ def resize_frame(frame):
 	rH = H / float(newH)
 
 	# resize the image and grab the new image dimensions
-	return(cv2.resize(frame, (newW, newH)))
+	return(cv2.resize(frame, (newW, newH)),rW,rH)
 
 def crop_save(frame, boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token):
 	# thread_number = 0
@@ -220,10 +218,9 @@ def crop_save(frame, boxes, x_coordinate, y_coordinate, z_coordinate, authorizat
 				cv2.rectangle(output, (startX, startY), (endX, endY), (0, 255, 0), 2)
 				new_boxes.append(np.array([startX,startY,endX,endY]))
 				threading.Thread(target=text_recognition_video, args=(imcrop, x_coordinate, y_coordinate, z_coordinate, authorization_token)).start()
-	cv2.imshow("output", output)
 	return np.asarray(new_boxes)
 
-def resized_boxes(boxes):
+def resized_boxes(boxes,rW,rH):
 	boxes[:,0] = boxes[:,0] * rW
 	boxes[:,1] = boxes[:,1] * rH
 	boxes[:,2] = boxes[:,2] * rW
@@ -232,34 +229,30 @@ def resized_boxes(boxes):
 
 # Main Algorithm
 def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area, adjustment_factor_x = adjustment_Factor_x, adjustment_factor_y = adjustment_Factor_y, offline_detection = offline_Detection, x_coordinate = x_Coordinate, y_coordinate = x_Coordinate, z_coordinate = z_Coordinate, authorization_token = authorization_Token ):
-	global frame,i, min_Area, min_Confidence, adjustment_Factor_x, adjustment_Factor_y
-	adjustment_Factor_x = adjustment_factor_x
-	adjustment_Factor_y = adjustment_factor_y
-	min_Area= min_area
-	min_Confidence = min_confidence
-	offline_Detection = offline_detection
-	
+	global firstFrame
+	if(len(firstFrame)>100):
+		firstFrame = {}
 	# Decoding frame
 	frame = decode_frame(encoded)
 
 	# resizing frame
-	frame = resize_frame(frame)
+	frame, rW, rH = resize_frame(frame)
 	
-	if(offline_Detection == False):
+	if(offline_detection == False):
 		## Check for motion
-		if (motion_detection(frame) == True or min_area==0):
+		if (motion_detection(frame,min_area, authorization_token) == True or min_area==0):
 			# print ("motion detected")
 			
 			(scores, geometry) = text_detection(frame)
 
 			# decode the predictions, then  apply non-maxima suppression to
 			# suppress weak, overlapping bounding boxes
-			(rects, confidences) = decode_predictions(scores, geometry,frame)
+			(rects, confidences) = decode_predictions(scores, geometry,frame,adjustment_factor_x,adjustment_factor_y,min_confidence)
 			
 			boxes = non_max_suppression(np.array(rects), probs=confidences)	
 			if(np.size(boxes)>1):
 				boxes = crop_save(frame,boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token)
-				return(resized_boxes(boxes))
+				return(resized_boxes(boxes,rW,rH))
 	else:
 		threading.Thread(target=text_recognition_video, args=(frame, x_coordinate, y_coordinate, z_coordinate, authorization_token)).start()
 		
