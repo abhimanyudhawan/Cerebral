@@ -15,7 +15,7 @@ frame = cv2.imread('test_image.jpg')
 (rH, rW) = (None, None)
 
 # resize the frame, maintaining the aspect ratio
-frame = imutils.resize(frame, width=300)
+# frame = imutils.resize(frame, width=300)
 orig = frame.copy()
 
 if W is None or H is None:
@@ -36,7 +36,7 @@ min_area = 0
 adjustment_factor_x = 0.2
 adjustment_factor_y = 0.5
 
-boxes = text_detection_v10.imageProcessor(encoded_byte, 0.999,min_area, adjustment_factor_x, adjustment_factor_y, authorization_token='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRhIjoiNWJkZjRhNmJiZDg3ZjMxY2U5MDdiMmMzX180NTk2NzciLCJpYXQiOjE1NDE4MjA2ODgsImV4cCI6MTU0NDQxMjY4OH0.TdOPISz-FEFHePwp-UetWnda6_6Xo2Iv6drJVp8rlz4')
+boxes, output_text = text_detection_v10.imageProcessor(encoded_byte, 0.999,min_area, adjustment_factor_x, adjustment_factor_y, authorization_token='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRhIjoiNWJkZjRhNmJiZDg3ZjMxY2U5MDdiMmMzX180NTk2NzciLCJpYXQiOjE1NDE4MjA2ODgsImV4cCI6MTU0NDQxMjY4OH0.TdOPISz-FEFHePwp-UetWnda6_6Xo2Iv6drJVp8rlz4')
 if(np.shape(boxes)!=None):
 	for (startX, startY, endX, endY) in boxes:
 		# startX = int(startX * rW)
@@ -44,6 +44,8 @@ if(np.shape(boxes)!=None):
 		# endX = int(endX * rW)
 		# endY = int(endY * rH)
 		# draw the bounding box on the frame
+		if output_text is not None:
+			print (output_text)
 		cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
 		cv2.imshow("Text Detection", orig)
 key = cv2.waitKey(0)

@@ -43,7 +43,7 @@ def scan_process():
             z_coordinate = float(data['z_coordinate'])
 
         try:
-            boxes = text_detection_v10.imageProcessor(encoded_byte, min_confidence, min_area, adjustment_factor_x, adjustment_factor_y, offline_detection, x_coordinate, y_coordinate, z_coordinate, authorization_token)
+            boxes,recognised_text = text_detection_v10.imageProcessor(encoded_byte, min_confidence, min_area, adjustment_factor_x, adjustment_factor_y, offline_detection, x_coordinate, y_coordinate, z_coordinate, authorization_token)
             
             # boxes = text_detection_v8.imageProcessor(encoded_byte, 0.2, 200, 0.2, 0.02)
             if(len(boxes)>0):
@@ -55,7 +55,10 @@ def scan_process():
                 "error" : {
                     "status" : False
                 },
-                "response" : output
+                "response" : {
+                    "boxes" :   output,
+                    "recognised_text"   :   recognised_text
+                }
             }
 
         except Exception as e:

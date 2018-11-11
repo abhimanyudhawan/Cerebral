@@ -88,7 +88,7 @@ while True:
 	# f.write(encoded_byte)
 
 	## Calling the actual API
-	boxes = text_detection_v10.imageProcessor(encoded_byte, args["min_confidence"], 
+	boxes, output_text = text_detection_v10.imageProcessor(encoded_byte, args["min_confidence"], 
 													min_area, adjustment_factor_x, adjustment_factor_y, authorization_token='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRhIjoiNWJkZjRhNmJiZDg3ZjMxY2U5MDdiMmMzX180NTk2NzciLCJpYXQiOjE1NDE4MjA2ODgsImV4cCI6MTU0NDQxMjY4OH0.TdOPISz-FEFHePwp-UetWnda6_6Xo2Iv6drJVp8rlz4')
     
     # loop over the bounding boxes
@@ -98,6 +98,8 @@ while True:
 			startY = int(startY * rH)
 			endX = int(endX * rW)
 			endY = int(endY * rH)
+			if (output_text is not None):
+				print(output_text)
 
 			# draw the bounding box on the frame
 			cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)

@@ -48,6 +48,7 @@ net = cv2.dnn.readNet("frozen_east_text_detection.pb")
 fps = FPS().start()
 
 firstFrame = {}
+recognised_text = {}
 
 def make_request(frame2):
 	frame2.read()
@@ -64,8 +65,7 @@ def make_request(frame2):
 			}
 	
 def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, authorization_token):
-	response = []	
-	texts = []
+	global recognised_text
 	# cv2.imwrite(save_file_path + "//"+"cropped.png",frame)
 	frame2 = cv2.imencode(".jpg",frame)[1].tostring()		
 	image = vision.types.Image(content=frame2)
@@ -75,6 +75,7 @@ def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, auth
 	if(len(texts)>0):
 		if(texts[0].description is not None):
 			code = texts[0].description.replace("\n", " ")
+			recognised_text[authorization_token]=code
 			# print(code)
 			headers = {'Content-Type': "application/json",'authorization': "Bearer "+ str(authorization_token)}
 			payload = {"id" : "5bdf4a6bbd87f31ce907b2c3",
@@ -86,7 +87,7 @@ def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, auth
 						"zCordinate" : z_coordinate}
 			response = requests.request("POST", url, data=json.dumps(payload), headers=headers)
 			# print(response.text.encode("utf-8"))
-	return texts
+	return recognised_text[authorization_token]
 
 
 def decode_predictions(scores, geometry,frame,adjustment_factor_x,adjustment_factor_y,min_confidence):
@@ -167,7 +168,7 @@ def motion_detection(frame,min_area, authorization_token):
 	gray = cv2.GaussianBlur(gray,(21,21),0)
 	if authorization_token not in firstFrame:
 		firstFrame[authorization_token] = gray.copy()
-		print("firstFrame assigned gray")
+		# print("firstFrame assigned gray")
 		return True		
 	else:
 		frameDelta = cv2.absdiff(firstFrame[authorization_token],gray)
@@ -206,7 +207,7 @@ def resize_frame(frame):
 def crop_save(frame, boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token):
 	# thread_number = 0
 	new_boxes = []
-	output = frame.copy()
+	# output = frame.copy()
 
 	for (startX, startY, endX, endY) in boxes:
 		if(abs(startY-startX)*abs(endX-endY)>1):		
@@ -215,7 +216,7 @@ def crop_save(frame, boxes, x_coordinate, y_coordinate, z_coordinate, authorizat
 				# thread_number = thread_number + 1
 				# cv2.imwrite("output" + str(thread_number) + ".jpg",imcrop)
 
-				cv2.rectangle(output, (startX, startY), (endX, endY), (0, 255, 0), 2)
+				# cv2.rectangle(output, (startX, startY), (endX, endY), (0, 255, 0), 2)
 				new_boxes.append(np.array([startX,startY,endX,endY]))
 				threading.Thread(target=text_recognition_video, args=(imcrop, x_coordinate, y_coordinate, z_coordinate, authorization_token)).start()
 	return np.asarray(new_boxes)
@@ -231,10 +232,16 @@ def resized_boxes(boxes,rW,rH):
 
 # Main Algorithm
 def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area, adjustment_factor_x = adjustment_Factor_x, adjustment_factor_y = adjustment_Factor_y, offline_detection = offline_Detection, x_coordinate = x_Coordinate, y_coordinate = x_Coordinate, z_coordinate = z_Coordinate, authorization_token = authorization_Token ):
-	global firstFrame
+	global firstFrame,recognised_text
+
+	if authorization_token not in recognised_text:
+		recognised_text[authorization_token] = None
+
 	if(len(firstFrame)>100):
 		firstFrame = {}
-	boxes = []
+		recognised_text={}
+
+	boxes = []	
 	# Decoding frame
 	frame = decode_frame(encoded)
 	# resizing frame
@@ -256,5 +263,5 @@ def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area
 				boxes = crop_save(frame,boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token)
 	else:
 		threading.Thread(target=text_recognition_video, args=(frame, x_coordinate, y_coordinate, z_coordinate, authorization_token)).start()
-		
-	return resized_boxes(boxes,rW,rH)
+
+	return resized_boxes(boxes,rW,rH), recognised_text[authorization_token]
