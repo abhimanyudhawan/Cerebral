@@ -233,8 +233,7 @@ def resized_boxes(boxes,rW,rH):
 # Main Algorithm
 def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area, adjustment_factor_x = adjustment_Factor_x, adjustment_factor_y = adjustment_Factor_y, offline_detection = offline_Detection, x_coordinate = x_Coordinate, y_coordinate = x_Coordinate, z_coordinate = z_Coordinate, authorization_token = authorization_Token ):
 	global firstFrame,recognised_text
-
-	# if authorization_token not in recognised_text:
+	#if authorization_token not in recognised_text:
 	recognised_text[authorization_token] = None
 
 	if(len(firstFrame)>100):
