@@ -12,6 +12,11 @@ min_confidence = 0.2
 min_area = 0
 adjustment_factor_x = 0.3
 adjustment_factor_y = 0.6
+offline_detection = False
+x_coordinate = 0 
+y_coordinate = 0
+z_coordinate = 0
+authorization_token = '0'
 
 @app.route('/scan',methods=['POST'])
 def scan_process():
