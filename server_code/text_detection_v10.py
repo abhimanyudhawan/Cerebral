@@ -206,30 +206,28 @@ def resize_frame(frame):
 
 def crop_save(frame, boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token):
 	# thread_number = 0
-	# new_boxes = []
-	# output = frame.copy()
-	final_box = []
-	distance_center_x = np.shape(frame)[1]
-	distance_bottom_y = np.shape(frame)[0]/5
+	final_boxes = []
+	distance_center_x = np.shape(frame)[1]/10
 	for (startX, startY, endX, endY) in boxes:
 		# if(abs(startY-startX)*abs(endX-endY)>1):		
 			imcrop = frame[startY: endY ,startX: endX]
 			if(np.size(imcrop)>1):	
 				# new_boxes.append(np.array([startX,startY,endX,endY]))
-				if (abs(np.shape(frame)[1]/2 - abs(startX + endX)/2) < distance_center_x and 
-					abs((np.shape(frame)[0]/2 - abs(startY + endY)/2) < distance_bottom_y)):
-						final_box = np.array([startX,startY,endX,endY])
-						distance_center_x = abs(np.shape(frame)[0] - abs(startX + endX)/2)
+				if (abs(np.shape(frame)[1]/2 - abs(startX + endX)/2) < distance_center_x): 
+					# and abs((np.shape(frame)[0]/2 - abs(startY + endY)/2) < distance_bottom_y)):
+						final_boxes.append(np.array([startX,startY,endX,endY]))
+						threading.Thread(target=text_recognition_video, args=(imcrop, x_coordinate, y_coordinate, z_coordinate, authorization_token)).start()
+						# distance_center_x = abs(np.shape(frame)[0] - abs(startX + endX)/2)
 	
-	if(np.shape(final_box)[0]==4):
-		# imcrop = cv2.resize(imcrop, (50,50))
-		# thread_number = thread_number + 1
-		imcrop = frame[final_box[1]: final_box[3] ,final_box[0]: final_box[2]]
-		threading.Thread(target=text_recognition_video, args=(imcrop, x_coordinate, y_coordinate, z_coordinate, authorization_token)).start()
-	return np.asarray([final_box])
+	# if(np.shape(final_box)[0]==4):
+	# 	# imcrop = cv2.resize(imcrop, (50,50))
+	# 	# thread_number = thread_number + 1
+	# 	imcrop = frame[final_box[1]: final_box[3] ,final_box[0]: final_box[2]]
+	# 	threading.Thread(target=text_recognition_video, args=(imcrop, x_coordinate, y_coordinate, z_coordinate, authorization_token)).start()
+	return np.asarray(final_boxes)
 
 def resized_boxes(boxes,rW,rH):
-	if(np.size(boxes)==4):
+	if(len(np.shape(boxes))==2):
 		boxes[:,0] = boxes[:,0] * rW
 		boxes[:,1] = boxes[:,1] * rH
 		boxes[:,2] = boxes[:,2] * rW
