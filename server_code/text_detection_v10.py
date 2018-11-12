@@ -155,7 +155,7 @@ def decode_predictions(scores, geometry,frame,adjustment_factor_x,adjustment_fac
 			endX = min(endX,np.shape(frame)[0])
 			startY = max(startY,0)
 			endY = min(endY,np.shape(frame)[1])
-				
+
 			rects.append((startX, startY, endX, endY))
 			confidences.append(scoresData[x])
 
@@ -210,12 +210,14 @@ def crop_save(frame, boxes, x_coordinate, y_coordinate, z_coordinate, authorizat
 	# output = frame.copy()
 	final_box = []
 	distance_center_x = np.shape(frame)[1]
+	distance_bottom_y = np.shape(frame)[0]/5
 	for (startX, startY, endX, endY) in boxes:
 		# if(abs(startY-startX)*abs(endX-endY)>1):		
 			imcrop = frame[startY: endY ,startX: endX]
 			if(np.size(imcrop)>1):	
 				# new_boxes.append(np.array([startX,startY,endX,endY]))
-				if (abs(np.shape(frame)[1]/2 - abs(startX + endX)/2) < distance_center_x):
+				if (abs(np.shape(frame)[1]/2 - abs(startX + endX)/2) < distance_center_x and 
+					abs((np.shape(frame)[0]/2 - abs(startY + endY)/2) < distance_bottom_y)):
 						final_box = np.array([startX,startY,endX,endY])
 						distance_center_x = abs(np.shape(frame)[0] - abs(startX + endX)/2)
 	
