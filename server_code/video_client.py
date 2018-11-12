@@ -23,7 +23,7 @@ ap.add_argument("-east", "--east", type=str, required=False,
 	help="path to input EAST text detector")
 ap.add_argument("-v", "--video", type=str,
 	help="path to optinal input video file")
-ap.add_argument("-c", "--min-confidence", type=float, default=0.7,
+ap.add_argument("-c", "--min-confidence", type=float, default=0.1,
 	help="minimum probability required to inspect a region")
 ap.add_argument("-w", "--width", type=int, default=192,
 	help="resized image width (should be multiple of 32)")
@@ -69,7 +69,7 @@ while True:
 		break
 
 	# resize the frame, maintaining the aspect ratio
-	frame = imutils.resize(frame, width=300)
+	# frame = imutils.resize(frame, width=300)
 	orig = frame.copy()
 	# if our frame dimensions are None, we still need to compute the
 	# ratio of old frame dimensions to new frame dimensions
@@ -89,21 +89,21 @@ while True:
 
 	## Calling the actual API
 	boxes, output_text = text_detection_v10.imageProcessor(encoded_byte, args["min_confidence"], 
-													min_area, adjustment_factor_x, adjustment_factor_y, authorization_token='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRhIjoiNWJkZjRhNmJiZDg3ZjMxY2U5MDdiMmMzX180NTk2NzciLCJpYXQiOjE1NDE4MjA2ODgsImV4cCI6MTU0NDQxMjY4OH0.TdOPISz-FEFHePwp-UetWnda6_6Xo2Iv6drJVp8rlz4')
+													10, adjustment_factor_x, adjustment_factor_y, authorization_token='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRhIjoiNWJkZjRhNmJiZDg3ZjMxY2U5MDdiMmMzX180NTk2NzciLCJpYXQiOjE1NDE4MjA2ODgsImV4cCI6MTU0NDQxMjY4OH0.TdOPISz-FEFHePwp-UetWnda6_6Xo2Iv6drJVp8rlz4')
     
-    # loop over the bounding boxes
+    # # loop over the bounding boxes
 	if(np.shape(boxes)!=None):
 		for (startX, startY, endX, endY) in boxes:
 			startX = int(startX * rW)
 			startY = int(startY * rH)
 			endX = int(endX * rW)
 			endY = int(endY * rH)
-			if (output_text is not None):
-				print(output_text)
+			# if (output_text is not None):
+			# 	print(output_text)
 
 			# draw the bounding box on the frame
 			cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
-			cv2.imshow("Text Detection", orig)
+	cv2.imshow("Text Detection", orig)
 
 	# update the FPS counter
 	fps.update()

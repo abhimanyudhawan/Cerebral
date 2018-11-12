@@ -16,7 +16,7 @@ offline_detection = False
 x_coordinate = 0 
 y_coordinate = 0
 z_coordinate = 0
-authorization_token = '0'
+accessToken = '0'
 
 @app.route('/scan',methods=['POST'])
 def scan_process():
@@ -43,7 +43,7 @@ def scan_process():
             z_coordinate = float(data['z_coordinate'])
 
         try:
-            boxes,recognised_text = text_detection_v10.imageProcessor(encoded_byte, min_confidence, min_area, adjustment_factor_x, adjustment_factor_y, offline_detection, x_coordinate, y_coordinate, z_coordinate, authorization_token)
+            boxes,recognised_text = text_detection_v10.imageProcessor(encoded_byte, min_confidence, min_area, adjustment_factor_x, adjustment_factor_y, offline_detection, x_coordinate, y_coordinate, z_coordinate)
             
             # boxes = text_detection_v8.imageProcessor(encoded_byte, 0.2, 200, 0.2, 0.02)
             if(len(boxes)>0):
