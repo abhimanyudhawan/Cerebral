@@ -15,11 +15,12 @@ from PIL import Image
 import math
 import requests
 import json
+from utils.colorutils import get_dominant_color
 
 url = "http://35.199.46.130/books/search"
 
 min_Area = 200
-min_Confidence = 0.2
+min_Confidence = 0.9
 adjustment_Factor_x = 0.3
 adjustment_Factor_y = 0.6
 offline_Detection = False
@@ -27,8 +28,9 @@ x_Coordinate = 0
 y_Coordinate = 0
 z_Coordinate = 0
 authorization_Token = '0'
+thread_number = 0
 
-save_file_path = "extracted_images"
+save_file_path = "extracted_images\\"
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "Cerebral-24ef0ec93035.json"
 """Detects text in the file."""
 client = vision.ImageAnnotatorClient()
@@ -67,16 +69,19 @@ def make_request(frame2):
 def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, authorization_token):
 	global recognised_text
 	# cv2.imwrite(save_file_path + "//"+"cropped.png",frame)
+	frame = imutils.resize(frame, width=80, inter=cv2.INTER_CUBIC)
 	frame2 = cv2.imencode(".jpg",frame)[1].tostring()		
 	image = vision.types.Image(content=frame2)
-
+	
 	response = client.text_detection(image = image)
 	texts = response.text_annotations
+	
 	if(len(texts)>0):
 		if(texts[0].description is not None):
 			code = texts[0].description.replace("\n", " ")
+			# print(code.encode("utf-8"))
 			recognised_text[authorization_token]=code
-			# print(code)
+			
 			headers = {'Content-Type': "application/json",'authorization': "Bearer "+ str(authorization_token)}
 			payload = {"id" : "5bdf4a6bbd87f31ce907b2c3",
 						"code" : code,
@@ -205,25 +210,30 @@ def resize_frame(frame):
 	return(cv2.resize(frame, (newW, newH)),rW,rH)
 
 def crop_save(frame, boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token):
-	# thread_number = 0
+	global thread_number
 	final_boxes = []
-	distance_center_x = np.shape(frame)[1]/10
+	distance_center_x = np.shape(frame)[1]/5
 	for (startX, startY, endX, endY) in boxes:
 		# if(abs(startY-startX)*abs(endX-endY)>1):		
 			imcrop = frame[startY: endY ,startX: endX]
 			if(np.size(imcrop)>1):	
 				# new_boxes.append(np.array([startX,startY,endX,endY]))
-				if (abs(np.shape(frame)[1]/2 - abs(startX + endX)/2) < distance_center_x): 
-					# and abs((np.shape(frame)[0]/2 - abs(startY + endY)/2) < distance_bottom_y)):
-						final_boxes.append(np.array([startX,startY,endX,endY]))
-						threading.Thread(target=text_recognition_video, args=(imcrop, x_coordinate, y_coordinate, z_coordinate, authorization_token)).start()
-						# distance_center_x = abs(np.shape(frame)[0] - abs(startX + endX)/2)
-	
-	# if(np.shape(final_box)[0]==4):
-	# 	# imcrop = cv2.resize(imcrop, (50,50))
-	# 	# thread_number = thread_number + 1
-	# 	imcrop = frame[final_box[1]: final_box[3] ,final_box[0]: final_box[2]]
-	# 	threading.Thread(target=text_recognition_video, args=(imcrop, x_coordinate, y_coordinate, z_coordinate, authorization_token)).start()
+				if (True):
+					# abs(np.shape(frame)[1]/2 - abs(startX + endX)/2) < distance_center_x): 
+					# and abs((np.shape(frame)[0]/2 - abs(startY + endY)/2) < distance_bottom_y)):												
+						hsv_image = cv2.cvtColor(imcrop, cv2.COLOR_BGR2HSV)
+						#extract dominant color 
+						# (aka the centroid of the most popular k means cluster)
+						dom_color = get_dominant_color(hsv_image, k=3)
+						dom_color = cv2.cvtColor(np.uint8([[dom_color]]), cv2.COLOR_HSV2BGR)
+						if(dom_color[0][0][0]>120 and dom_color[0][0][1]>180 and dom_color[0][0][2]>180):
+							final_boxes.append(np.array([startX,startY,endX,endY]))
+							threading.Thread(target=text_recognition_video, args=(imcrop, x_coordinate, y_coordinate, z_coordinate, authorization_token)).start()
+							# distance_center_x = abs(np.shape(frame)[0] - abs(startX + endX)/2)
+							# thread_number = thread_number + 1
+							# cv2.imwrite(save_file_path + str(thread_number) + ".jpg", imcrop) 
+							# # cv2.imshow('mask' + str(thread_number),mask) 
+							# cv2.imshow('res' + str(thread_number),res) 
 	return np.asarray(final_boxes)
 
 def resized_boxes(boxes,rW,rH):
@@ -238,8 +248,8 @@ def resized_boxes(boxes,rW,rH):
 # Main Algorithm
 def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area, adjustment_factor_x = adjustment_Factor_x, adjustment_factor_y = adjustment_Factor_y, offline_detection = offline_Detection, x_coordinate = x_Coordinate, y_coordinate = x_Coordinate, z_coordinate = z_Coordinate, authorization_token = authorization_Token ):
 	global firstFrame,recognised_text
-	#if authorization_token not in recognised_text:
-	recognised_text[authorization_token] = None
+	if authorization_token not in recognised_text:
+		recognised_text[authorization_token] = None
 
 	if(len(firstFrame)>100):
 		firstFrame = {}
@@ -261,7 +271,6 @@ def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area
 			# decode the predictions, then  apply non-maxima suppression to
 			# suppress weak, overlapping bounding boxes
 			(rects, confidences) = decode_predictions(scores, geometry,frame,adjustment_factor_x,adjustment_factor_y,min_confidence)
-			
 			boxes = non_max_suppression(np.array(rects), probs=confidences)	
 			if(np.size(boxes)>1):
 				boxes = crop_save(frame,boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token)

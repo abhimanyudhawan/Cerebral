@@ -33,10 +33,10 @@ encoded_byte = (base64.b64encode(encoded_image))
 # f.close()
 
 min_area = 0
-adjustment_factor_x = 0.2
+adjustment_factor_x = 0.08
 adjustment_factor_y = 0.5
 
-boxes, output_text = text_detection_v10.imageProcessor(encoded_byte, 0.5,min_area, adjustment_factor_x, adjustment_factor_y, authorization_token='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRhIjoiNWJkZjRhNmJiZDg3ZjMxY2U5MDdiMmMzX180NTk2NzciLCJpYXQiOjE1NDE4MjA2ODgsImV4cCI6MTU0NDQxMjY4OH0.TdOPISz-FEFHePwp-UetWnda6_6Xo2Iv6drJVp8rlz4')
+boxes, output_text = text_detection_v10.imageProcessor(encoded_byte, 0.9,min_area, adjustment_factor_x, adjustment_factor_y, authorization_token='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJkYXRhIjoiNWJkZjRhNmJiZDg3ZjMxY2U5MDdiMmMzX180NTk2NzciLCJpYXQiOjE1NDE4MjA2ODgsImV4cCI6MTU0NDQxMjY4OH0.TdOPISz-FEFHePwp-UetWnda6_6Xo2Iv6drJVp8rlz4')
 if(np.shape(boxes)!=None):
 	for (startX, startY, endX, endY) in boxes:
 		# startX = int(startX * rW)
