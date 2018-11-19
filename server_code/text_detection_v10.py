@@ -20,7 +20,7 @@ from utils.colorutils import get_dominant_color
 url = "http://35.199.46.130/books/search"
 
 min_Area = 200
-min_Confidence = 0.9
+min_Confidence = 0.1
 adjustment_Factor_x = 0.3
 adjustment_Factor_y = 0.6
 offline_Detection = False
@@ -69,7 +69,7 @@ def make_request(frame2):
 def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, authorization_token):
 	global recognised_text
 	# cv2.imwrite(save_file_path + "//"+"cropped.png",frame)
-	frame = imutils.resize(frame, width=80, inter=cv2.INTER_CUBIC)
+	frame = imutils.resize(frame, width=100, inter=cv2.INTER_CUBIC)
 	frame2 = cv2.imencode(".jpg",frame)[1].tostring()		
 	image = vision.types.Image(content=frame2)
 	
@@ -79,7 +79,7 @@ def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, auth
 	if(len(texts)>0):
 		if(texts[0].description is not None):
 			code = texts[0].description.replace("\n", " ")
-			# print(code.encode("utf-8"))
+			print(code.encode("utf-8"))
 			recognised_text[authorization_token]=code
 			
 			headers = {'Content-Type': "application/json",'authorization': "Bearer "+ str(authorization_token)}
@@ -201,8 +201,11 @@ def decode_frame(encoded):
 
 def resize_frame(frame):
 	(H, W) = frame.shape[:2]
-	newH = H - H%32
-	newW = W - W%32
+	frame = imutils.resize(frame, height=300, inter=cv2.INTER_CUBIC)
+	# newH = H - H%32
+	# newW = W - W%32
+	newH = frame.shape[0] - frame.shape[0]%32
+	newW = frame.shape[1] - frame.shape[1]%32
 	rW = W / float(newW)
 	rH = H / float(newH)
 
@@ -211,29 +214,34 @@ def resize_frame(frame):
 
 def crop_save(frame, boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token):
 	global thread_number
+	final_image = None
 	final_boxes = []
 	distance_center_x = np.shape(frame)[1]/5
-	for (startX, startY, endX, endY) in boxes:
-		# if(abs(startY-startX)*abs(endX-endY)>1):		
-			imcrop = frame[startY: endY ,startX: endX]
-			if(np.size(imcrop)>1):	
-				# new_boxes.append(np.array([startX,startY,endX,endY]))
-				if (True):
-					# abs(np.shape(frame)[1]/2 - abs(startX + endX)/2) < distance_center_x): 
-					# and abs((np.shape(frame)[0]/2 - abs(startY + endY)/2) < distance_bottom_y)):												
-						hsv_image = cv2.cvtColor(imcrop, cv2.COLOR_BGR2HSV)
-						#extract dominant color 
-						# (aka the centroid of the most popular k means cluster)
-						dom_color = get_dominant_color(hsv_image, k=3)
-						dom_color = cv2.cvtColor(np.uint8([[dom_color]]), cv2.COLOR_HSV2BGR)
-						if(dom_color[0][0][0]>120 and dom_color[0][0][1]>180 and dom_color[0][0][2]>180):
-							final_boxes.append(np.array([startX,startY,endX,endY]))
-							threading.Thread(target=text_recognition_video, args=(imcrop, x_coordinate, y_coordinate, z_coordinate, authorization_token)).start()
-							# distance_center_x = abs(np.shape(frame)[0] - abs(startX + endX)/2)
-							# thread_number = thread_number + 1
-							# cv2.imwrite(save_file_path + str(thread_number) + ".jpg", imcrop) 
-							# # cv2.imshow('mask' + str(thread_number),mask) 
-							# cv2.imshow('res' + str(thread_number),res) 
+	distance_bottom_y = np.shape(frame)[0]
+	for (startX, startY, endX, endY) in boxes:		
+		imcrop = frame[startY: endY ,startX: endX]
+		if(np.size(imcrop)>1):	
+			if (abs(np.shape(frame)[1]/2 - abs(startX + endX)/2) < distance_center_x and abs((np.shape(frame)[0]/2 - abs(startY + endY)/2) < distance_bottom_y)):
+				distance_bottom_y = abs((np.shape(frame)[0]/2 - abs(startY + endY)/2))
+				# print(distance_bottom_y)
+				final_boxes= [np.array([startX,startY,endX,endY])]
+				final_image = imcrop
+						# final_image = imcrop
+					# # hsv_image = cv2.cvtColor(imcrop, cv2.COLOR_BGR2HSV)
+					# # #extract dominant color 
+					# # # (aka the centroid of the most popular k means cluster)
+					# # dom_color = get_dominant_color(hsv_image, k=3)
+					# # dom_color = cv2.cvtColor(np.uint8([[dom_color]]), cv2.COLOR_HSV2BGR)
+					# # if(dom_color[0][0][0]>120 and dom_color[0][0][1]>180 and dom_color[0][0][2]>180):
+						# distance_center_x = abs(np.shape(frame)[0] - abs(startX + endX)/2)
+			# thread_number = thread_number + 1
+			# 			# cv2.imwrite(save_file_path + str(thread_number) + ".jpg", imcrop) 
+			
+						# cv2.imshow('res' + str(thread_number),res) 
+	# print ( abs((np.shape(frame)[0]/2 - abs(final_boxes[0][1] + final_boxes[0][3])/2)))
+	if(np.size(final_image)>1):
+		cv2.imshow('output' + str(thread_number),final_image) 
+		threading.Thread(target=text_recognition_video, args=(final_image, x_coordinate, y_coordinate, z_coordinate, authorization_token)).start()
 	return np.asarray(final_boxes)
 
 def resized_boxes(boxes,rW,rH):
@@ -258,7 +266,10 @@ def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area
 	boxes = []	
 	# Decoding frame
 	frame = decode_frame(encoded)
+	frame = cv2.cvtColor(frame,cv2.COLOR_YCrCb2RGB)
+	cv2.imwrite("converted_image.jpg",frame)
 	# resizing frame
+	# frame = imutils.resize(frame, width=600, inter=cv2.INTER_CUBIC)
 	frame, rW, rH = resize_frame(frame)
 	
 	if(offline_detection == False):
