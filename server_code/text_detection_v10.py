@@ -266,7 +266,7 @@ def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area
 	boxes = []	
 	# Decoding frame
 	frame = decode_frame(encoded)
-	frame = cv2.cvtColor(frame,cv2.COLOR_YCrCb2RGB)
+	# frame = cv2.cvtColor(frame,cv2.COLOR_YCrCb2RGB)
 	cv2.imwrite("converted_image.jpg",frame)
 	# resizing frame
 	# frame = imutils.resize(frame, width=600, inter=cv2.INTER_CUBIC)
