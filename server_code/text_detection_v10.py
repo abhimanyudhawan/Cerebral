@@ -79,7 +79,7 @@ def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, auth
 	if(len(texts)>0):
 		if(texts[0].description is not None):
 			code = texts[0].description.replace("\n", " ")
-			print(code.encode("utf-8"))
+			# print(code.encode("utf-8"))
 			recognised_text[authorization_token]=code
 			
 			headers = {'Content-Type': "application/json",'authorization': "Bearer "+ str(authorization_token)}
