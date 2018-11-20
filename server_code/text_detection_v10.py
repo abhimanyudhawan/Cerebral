@@ -69,7 +69,7 @@ def make_request(frame2):
 def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, authorization_token):
 	global recognised_text
 	# cv2.imwrite(save_file_path + "//"+"cropped.png",frame)
-	frame = imutils.resize(frame, width=100, inter=cv2.INTER_CUBIC)
+	#frame = imutils.resize(frame, width=100, inter=cv2.INTER_CUBIC)
 	frame2 = cv2.imencode(".jpg",frame)[1].tostring()		
 	image = vision.types.Image(content=frame2)
 	
@@ -79,7 +79,7 @@ def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, auth
 	if(len(texts)>0):
 		if(texts[0].description is not None):
 			code = texts[0].description.replace("\n", " ")
-			# print(code.encode("utf-8"))
+			print(code.encode("utf-8"))
 			recognised_text[authorization_token]=code
 			
 			headers = {'Content-Type': "application/json",'authorization': "Bearer "+ str(authorization_token)}
@@ -201,7 +201,7 @@ def decode_frame(encoded):
 
 def resize_frame(frame):
 	(H, W) = frame.shape[:2]
-	frame = imutils.resize(frame, height=300, inter=cv2.INTER_CUBIC)
+	frame = imutils.resize(frame, height=500, inter=cv2.INTER_CUBIC)
 	# newH = H - H%32
 	# newW = W - W%32
 	newH = frame.shape[0] - frame.shape[0]%32
@@ -220,6 +220,7 @@ def crop_save(frame, boxes, x_coordinate, y_coordinate, z_coordinate, authorizat
 	distance_bottom_y = np.shape(frame)[0]
 	for (startX, startY, endX, endY) in boxes:		
 		imcrop = frame[startY: endY ,startX: endX]
+		cv2.imwrite("converted_image.jpg",imcrop)
 		if(np.size(imcrop)>1):	
 			if (abs(np.shape(frame)[1]/2 - abs(startX + endX)/2) < distance_center_x and abs((np.shape(frame)[0]/2 - abs(startY + endY)/2) < distance_bottom_y)):
 				distance_bottom_y = abs((np.shape(frame)[0]/2 - abs(startY + endY)/2))
