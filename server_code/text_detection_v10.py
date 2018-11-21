@@ -79,7 +79,7 @@ def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, auth
 	if(len(texts)>0):
 		if(texts[0].description is not None):
 			code = texts[0].description.replace("\n", " ")
-			print(code.encode("utf-8"))
+			#print(code.encode("utf-8"))
 			recognised_text[authorization_token]=code
 			
 			headers = {'Content-Type': "application/json",'authorization': "Bearer "+ str(authorization_token)}
@@ -267,7 +267,6 @@ def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area
 	# Decoding frame
 	frame = decode_frame(encoded)
 	# frame = cv2.cvtColor(frame,cv2.COLOR_YCrCb2RGB)
-	cv2.imwrite("converted_image.jpg",frame)
 	# resizing frame
 	# frame = imutils.resize(frame, width=600, inter=cv2.INTER_CUBIC)
 	frame, rW, rH = resize_frame(frame)
