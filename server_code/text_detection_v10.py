@@ -69,7 +69,8 @@ def make_request(frame2):
 def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, authorization_token):
 	global recognised_text
 	# cv2.imwrite(save_file_path + "//"+"cropped.png",frame)
-	#frame = imutils.resize(frame, width=100, inter=cv2.INTER_CUBIC)
+	frame = imutils.resize(frame, width=100, inter=cv2.INTER_CUBIC)
+	cv2.imwrite("text.jpg",frame)
 	frame2 = cv2.imencode(".jpg",frame)[1].tostring()		
 	image = vision.types.Image(content=frame2)
 	
@@ -220,7 +221,7 @@ def crop_save(frame, boxes, x_coordinate, y_coordinate, z_coordinate, authorizat
 	distance_bottom_y = np.shape(frame)[0]
 	for (startX, startY, endX, endY) in boxes:		
 		imcrop = frame[startY: endY ,startX: endX]
-		cv2.imwrite("converted_image.jpg",imcrop)
+		cv2.imwrite("cropped.jpg",imcrop)
 		if(np.size(imcrop)>1):	
 			if (abs(np.shape(frame)[1]/2 - abs(startX + endX)/2) < distance_center_x and abs((np.shape(frame)[0]/2 - abs(startY + endY)/2) < distance_bottom_y)):
 				distance_bottom_y = abs((np.shape(frame)[0]/2 - abs(startY + endY)/2))
@@ -270,7 +271,7 @@ def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area
 	# resizing frame
 	# frame = imutils.resize(frame, width=600, inter=cv2.INTER_CUBIC)
 	frame, rW, rH = resize_frame(frame)
-	
+	cv2.imwrite("resized.jpg",frame)
 	if(offline_detection == False):
 		## Check for motion
 		if (motion_detection(frame,min_area, authorization_token) == True or min_area==0):
