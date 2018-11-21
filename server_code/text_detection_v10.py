@@ -69,7 +69,7 @@ def make_request(frame2):
 def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, authorization_token):
 	global recognised_text
 	# cv2.imwrite(save_file_path + "//"+"cropped.png",frame)
-	frame = imutils.resize(frame, width=100, inter=cv2.INTER_CUBIC)
+	frame = imutils.resize(frame, width=200, inter=cv2.INTER_CUBIC)
 	cv2.imwrite("text.jpg",frame)
 	frame2 = cv2.imencode(".jpg",frame)[1].tostring()		
 	image = vision.types.Image(content=frame2)
