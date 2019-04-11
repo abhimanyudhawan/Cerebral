@@ -9,7 +9,7 @@ import text_detection_v10
 app = Flask(__name__)
 
 min_confidence = 0.2
-min_area = 0
+min_area = 20
 adjustment_factor_x = 0.3
 adjustment_factor_y = 0.6
 offline_detection = False
@@ -43,7 +43,7 @@ def scan_process():
             z_coordinate = float(data['z_coordinate'])
 
         try:
-            boxes,recognised_text = text_detection_v10.imageProcessor(encoded_byte, min_confidence, min_area, adjustment_factor_x, adjustment_factor_y, offline_detection, x_coordinate, y_coordinate, z_coordinate)
+            boxes,recognised_text = text_detection_v10.imageProcessor(encoded_byte, min_confidence, min_area, adjustment_factor_x, adjustment_factor_y, offline_detection)
             
             # boxes = text_detection_v8.imageProcessor(encoded_byte, 0.2, 200, 0.2, 0.02)
             if(len(boxes)>0):
