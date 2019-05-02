@@ -15,7 +15,6 @@ from PIL import Image
 import math
 import requests
 import json
-from utils.colorutils import get_dominant_color
 
 url = "http://35.199.46.130/books/search"
 
