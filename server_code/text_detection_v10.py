@@ -30,7 +30,7 @@ authorization_Token = '0'
 thread_number = 0
 
 save_file_path = "extracted_images\\"
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "Cerebral-24ef0ec93035.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getcwd()+"/Cerebral-24ef0ec93035.json"
 """Detects text in the file."""
 client = vision.ImageAnnotatorClient()
 
