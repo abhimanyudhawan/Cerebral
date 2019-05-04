@@ -57,19 +57,18 @@ def scan_process():
             }
         }
 
-        except Exception as e:
+    except Exception as e:
+        print("Exception:")
+        print(str(e))
 
-            print("Exception:")
-            print(str(e))
-
-            res = {
-                "error" : {
-                    "status" : True,
-                    "message" : str(e)
-                }
+        res = {
+            "error" : {
+                "status" : True,
+                "message" : str(e)
             }
+        }
 
-        return jsonify(**res)
+    return jsonify(**res)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=True)
