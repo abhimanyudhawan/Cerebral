@@ -7,6 +7,7 @@ import imutils
 import time
 import cv2.cv2 as cv2
 from google.cloud import vision
+#from google.auth import compute_engine
 import os
 import io
 import base64
@@ -30,7 +31,7 @@ authorization_Token = '0'
 thread_number = 0
 
 save_file_path = "extracted_images\\"
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getcwd()+"/Cerebral-24ef0ec93035.json"
+#os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = compute_engine.Credentials()
 """Detects text in the file."""
 client = vision.ImageAnnotatorClient()
 
