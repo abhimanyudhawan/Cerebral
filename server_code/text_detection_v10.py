@@ -31,7 +31,10 @@ authorization_Token = '0'
 thread_number = 0
 
 save_file_path = "extracted_images\\"
-if(os.path.isfile(os.path.expanduser('~') + "/Indoor Buddy-53b4d75c9305.json")):
+if(os.path.isfile(os.getcwd() + "/Indoor Buddy-53b4d75c9305.json")):
+	os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getcwd() + "/Indoor Buddy-53b4d75c9305.json"
+
+elif(os.path.isfile(os.path.expanduser('~') + "/Indoor Buddy-53b4d75c9305.json")):
 	os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.expanduser('~') + "/Indoor Buddy-53b4d75c9305.json"
 """Detects text in the file."""
 client = vision.ImageAnnotatorClient()
