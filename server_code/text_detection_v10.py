@@ -31,7 +31,8 @@ authorization_Token = '0'
 thread_number = 0
 
 save_file_path = "extracted_images\\"
-#os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = compute_engine.Credentials()
+if(os.path.isfile(os.path.expanduser('~') + "/Indoor Buddy-53b4d75c9305.json")):
+	os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.expanduser('~') + "/Indoor Buddy-53b4d75c9305.json"
 """Detects text in the file."""
 client = vision.ImageAnnotatorClient()
 
@@ -67,7 +68,7 @@ def make_request(frame2):
       				]
 			}
 	
-def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, authorization_token):
+def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, authorization_token,box):
 	global recognised_text
 	# cv2.imwrite(save_file_path + "//"+"cropped.png",frame)
 	#frame = imutils.resize(frame, width=200, inter=cv2.INTER_CUBIC)
@@ -80,9 +81,13 @@ def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, auth
 	
 	if(len(texts)>0):
 		if(texts[0].description is not None):
-			code = texts[0].description.replace("\n", " ")
+			code = texts[0].description
 			print(code.encode("utf-8"))
-			recognised_text[authorization_token]=code
+			print(box)
+			if(recognised_text[authorization_token]!=None):
+				recognised_text[authorization_token]= str(recognised_text[authorization_token]) + '<' +str(box) + '>' + code
+			else:
+				recognised_text[authorization_token] = '<' +str(box) + '>' + code  
 			
 			#headers = {'Content-Type': "application/json",'authorization': "Bearer "+ str(authorization_token)}
 			#payload = {"id" : "5bdf4a6bbd87f31ce907b2c3",
@@ -202,19 +207,21 @@ def decode_frame(encoded):
 	return(cv2.imdecode(decoded, flags=1))
 
 def resize_frame(frame):
+	# frame = cv2.resize(frame, (1024,768),interpolation=cv2.INTER_LINEAR_EXACT)
 	(H, W) = frame.shape[:2]
-	frame = imutils.resize(frame, height=500, inter=cv2.INTER_CUBIC)
+	frame = imutils.resize(frame, width=450, inter=cv2.INTER_LINEAR_EXACT)
 	# newH = H - H%32
 	# newW = W - W%32
 	newH = frame.shape[0] - frame.shape[0]%32
 	newW = frame.shape[1] - frame.shape[1]%32
+	# print(frame.shape[0],frame.shape[1])
 	rW = W / float(newW)
 	rH = H / float(newH)
 
 	# resize the image and grab the new image dimensions
 	return(cv2.resize(frame, (newW, newH)),rW,rH)
 
-def crop_save(frame, boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token):
+def crop_save(frame, boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token,rW,rH):
 	global thread_number
 	final_image = None
 	final_boxes = []
@@ -223,11 +230,13 @@ def crop_save(frame, boxes, x_coordinate, y_coordinate, z_coordinate, authorizat
 	for (startX, startY, endX, endY) in boxes:		
 		imcrop = frame[startY: endY ,startX: endX]
 		#cv2.imwrite("cropped.jpg",imcrop)
-		if(np.size(imcrop)>1):	
-			if (1 or abs(np.shape(frame)[1]/2 - abs(startX + endX)/2) < distance_center_x and abs((np.shape(frame)[0]/2 - abs(startY + endY)/2) < distance_bottom_y)):
+		if(np.size(imcrop)>1):
+			if(True):	
+			# if (1 or abs(np.shape(frame)[1]/2 - abs(startX + endX)/2) < distance_center_x and abs((np.shape(frame)[0]/2 - abs(startY + endY)/2) < distance_bottom_y)):
 				distance_bottom_y = abs((np.shape(frame)[0]/2 - abs(startY + endY)/2))
 				# print(distance_bottom_y)
-				final_boxes= [np.array([startX,startY,endX,endY])]
+				text_box = [np.array([startX,startY,endX,endY])]
+				final_boxes.append(np.array([startX,startY,endX,endY]))
 				final_image = imcrop
 						# final_image = imcrop
 					# # hsv_image = cv2.cvtColor(imcrop, cv2.COLOR_BGR2HSV)
@@ -242,8 +251,8 @@ def crop_save(frame, boxes, x_coordinate, y_coordinate, z_coordinate, authorizat
 			
 						# cv2.imshow('res' + str(thread_number),res) 
 	# print ( abs((np.shape(frame)[0]/2 - abs(final_boxes[0][1] + final_boxes[0][3])/2)))
-	if(np.size(final_image)>1):
-		threading.Thread(target=text_recognition_video, args=(final_image, x_coordinate, y_coordinate, z_coordinate, authorization_token)).start()
+				if(np.size(final_image)>1):
+					threading.Thread(target=text_recognition_video, args=(final_image, x_coordinate, y_coordinate, z_coordinate, authorization_token,resized_boxes(np.asarray(text_box),rW,rH))).start()
 	return np.asarray(final_boxes)
 
 def resized_boxes(boxes,rW,rH):
@@ -273,9 +282,9 @@ def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area
 	boxes = []	
 	# Decoding frame
 	frame = decode_frame(encoded)
-	# frame = cv2.cvtColor(frame,cv2.COLOR_YCrCb2RGB)
+	frame = cv2.cvtColor(frame,cv2.COLOR_YCrCb2RGB)
 	# resizing frame
-	#frame = imutils.resize(frame, width=600, inter=cv2.INTER_CUBIC)
+	# frame = imutils.resize(frame, width=1024,height=768, inter=cv2.INTER_CUBIC)
 	frame, rW, rH = resize_frame(frame)
 	#cv2.imwrite("resized.jpg",frame)
 	if(offline_detection == False):
@@ -290,7 +299,8 @@ def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area
 			(rects, confidences) = decode_predictions(scores, geometry,frame,adjustment_factor_x,adjustment_factor_y,min_confidence)
 			boxes = non_max_suppression(np.array(rects), probs=confidences)	
 			if(np.size(boxes)>1):
-				boxes = crop_save(frame,boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token)
+				boxes = crop_save(frame,boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token,rW,rH)
+
 	else:
 		threading.Thread(target=text_recognition_video, args=(frame, x_coordinate, y_coordinate, z_coordinate, authorization_token)).start()
 	

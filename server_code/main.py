@@ -6,9 +6,9 @@ import text_detection_v10
 
 app = Flask(__name__)
 
-min_confidence = 0.2
-min_area = 20
-adjustment_factor_x = 0.3
+min_confidence = 0.002
+min_area = 0
+adjustment_factor_x = 0.4
 adjustment_factor_y = 0.6
 offline_detection = False
 x_coordinate = 0 
@@ -22,7 +22,7 @@ def scan_process():
     try:
         data = request.get_json()
         authorization_token = request.headers.get('Authorization')
-        encoded_byte   = data['encoded_byte']
+        encoded_byte  = data['encoded_byte']
         if('min_confidence' in data):
             min_confidence = float(data['min_confidence'])
         if('min_area' in data):
