@@ -6,10 +6,10 @@ import text_detection_v10
 
 app = Flask(__name__)
 
-min_confidence = 0.002
+min_confidence = 0.999
 min_area = 0
-adjustment_factor_x = 0.4
-adjustment_factor_y = 0.6
+adjustment_factor_x = 0.7
+adjustment_factor_y = 0.4
 offline_detection = False
 x_coordinate = 0 
 y_coordinate = 0
@@ -20,6 +20,7 @@ accessToken = '0'
 def scan_process():
     global min_confidence,min_area,adjustment_factor_x,adjustment_factor_y,offline_detection,x_coordinate,y_coordinate,z_coordinate,authorization_token
     try:
+        # print (request.data)
         data = request.get_json()
         authorization_token = request.headers.get('Authorization')
         encoded_byte  = data['encoded_byte']

@@ -317,7 +317,7 @@ accessToken = '0'
 def scan_process():
     global min_confidence,min_area,adjustment_factor_x,adjustment_factor_y,offline_detection,x_coordinate,y_coordinate,z_coordinate,authorization_token
     authorization_token = request.headers.get('Authorization')
-    data = request.get_json()
+    data = ast.literal_eval(request.data)
     try:
         encoded_byte   = data['encoded_byte']
         if('min_confidence' in data):

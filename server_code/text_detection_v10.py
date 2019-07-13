@@ -71,7 +71,7 @@ def make_request(frame2):
       				]
 			}
 	
-def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, authorization_token,box):
+def text_recognition_video(frame, x_coordinate, y_coordinate, z_coordinate, authorization_token,box = None):
 	global recognised_text
 	# cv2.imwrite(save_file_path + "//"+"cropped.png",frame)
 	#frame = imutils.resize(frame, width=200, inter=cv2.INTER_CUBIC)
@@ -212,7 +212,7 @@ def decode_frame(encoded):
 def resize_frame(frame):
 	# frame = cv2.resize(frame, (1024,768),interpolation=cv2.INTER_LINEAR_EXACT)
 	(H, W) = frame.shape[:2]
-	frame = imutils.resize(frame, width=450, inter=cv2.INTER_LINEAR_EXACT)
+	frame = imutils.resize(frame, width=768, inter=cv2.INTER_LINEAR_EXACT) #450 #768
 	# newH = H - H%32
 	# newW = W - W%32
 	newH = frame.shape[0] - frame.shape[0]%32
@@ -285,12 +285,13 @@ def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area
 	boxes = []	
 	# Decoding frame
 	frame = decode_frame(encoded)
-	frame = cv2.cvtColor(frame,cv2.COLOR_YCrCb2RGB)
-	# resizing frame
-	# frame = imutils.resize(frame, width=1024,height=768, inter=cv2.INTER_CUBIC)
-	frame, rW, rH = resize_frame(frame)
+	
 	#cv2.imwrite("resized.jpg",frame)
 	if(offline_detection == False):
+		# frame = cv2.cvtColor(frame,cv2.COLOR_YCrCb2RGB)
+		# resizing frame
+		# frame = imutils.resize(frame, width=1024,height=768, inter=cv2.INTER_CUBIC)
+		frame, rW, rH = resize_frame(frame)
 		## Check for motion
 		if (motion_detection(frame,min_area, authorization_token) == True or min_area==0):
 			# print ("motion detected")
@@ -300,13 +301,15 @@ def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area
 			# decode the predictions, then  apply non-maxima suppression to
 			# suppress weak, overlapping bounding boxes
 			(rects, confidences) = decode_predictions(scores, geometry,frame,adjustment_factor_x,adjustment_factor_y,min_confidence)
-			boxes = non_max_suppression(np.array(rects), probs=confidences)	
+			boxes = non_max_suppression(np.array(rects), probs=confidences, overlapThresh=0.3)	
 			if(np.size(boxes)>1):
 				boxes = crop_save(frame,boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token,rW,rH)
 
 	else:
+		rW, rH = frame.shape[0], frame.shape[1]
 		threading.Thread(target=text_recognition_video, args=(frame, x_coordinate, y_coordinate, z_coordinate, authorization_token)).start()
-	
+		print("Doing offline detection OCR")
+		
 	if recognised_text[authorization_token] is not None:
 		output_text[authorization_token] = recognised_text[authorization_token]
 		recognised_text[authorization_token] = None
