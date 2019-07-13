@@ -177,7 +177,7 @@ def decode_predictions(scores, geometry,frame,adjustment_factor_x,adjustment_fac
 	# return a tuple of the bounding boxes and associated confidences
 	return (rects, confidences)
 
-def motion_detection(frame,min_area, authorization_token):
+def motion_detection(frame,min_area = 100 , authorization_token = '0'):
 	global firstFrame
 	gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
 	gray = cv2.GaussianBlur(gray,(21,21),0)
@@ -212,7 +212,7 @@ def decode_frame(encoded):
 def resize_frame(frame):
 	# frame = cv2.resize(frame, (1024,768),interpolation=cv2.INTER_LINEAR_EXACT)
 	(H, W) = frame.shape[:2]
-	frame = imutils.resize(frame, width=768, inter=cv2.INTER_LINEAR_EXACT) #450 #768
+	frame = imutils.resize(frame, width=1024, inter=cv2.INTER_LINEAR_EXACT) #450 #768
 	# newH = H - H%32
 	# newW = W - W%32
 	newH = frame.shape[0] - frame.shape[0]%32
