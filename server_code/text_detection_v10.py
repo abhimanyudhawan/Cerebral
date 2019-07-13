@@ -295,8 +295,8 @@ def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area
 		## Check for motion
 		if (motion_detection(frame,min_area, authorization_token) == True or min_area==0):
 			# print ("motion detected")
-			
-			(scores, geometry) = text_detection(frame)
+			print(text_detection(frame))
+			# (scores, geometry) = text_detection(frame)
 
 			# # decode the predictions, then  apply non-maxima suppression to
 			# # suppress weak, overlapping bounding boxes
