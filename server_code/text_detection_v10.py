@@ -298,12 +298,12 @@ def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area
 			
 			(scores, geometry) = text_detection(frame)
 
-			# decode the predictions, then  apply non-maxima suppression to
-			# suppress weak, overlapping bounding boxes
-			(rects, confidences) = decode_predictions(scores, geometry,frame,adjustment_factor_x,adjustment_factor_y,min_confidence)
-			boxes = non_max_suppression(np.array(rects), probs=confidences, overlapThresh=0.15)	
-			if(np.size(boxes)>1):
-				boxes = crop_save(frame,boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token,rW,rH)
+			# # decode the predictions, then  apply non-maxima suppression to
+			# # suppress weak, overlapping bounding boxes
+			# (rects, confidences) = decode_predictions(scores, geometry,frame,adjustment_factor_x,adjustment_factor_y,min_confidence)
+			# boxes = non_max_suppression(np.array(rects), probs=confidences, overlapThresh=0.15)	
+			# if(np.size(boxes)>1):
+			# 	boxes = crop_save(frame,boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token,rW,rH)
 
 	else:
 		rW, rH = frame.shape[0], frame.shape[1]
