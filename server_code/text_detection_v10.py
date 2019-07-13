@@ -285,13 +285,13 @@ def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area
 	boxes = []	
 	# Decoding frame
 	frame = decode_frame(encoded)
-	
+	frame, rW, rH = resize_frame(frame)
 	#cv2.imwrite("resized.jpg",frame)
 	# if(offline_detection == False):
 	# 	# frame = cv2.cvtColor(frame,cv2.COLOR_YCrCb2RGB)
 	# 	# resizing frame
 	# 	# frame = imutils.resize(frame, width=1024,height=768, inter=cv2.INTER_CUBIC)
-	# 	frame, rW, rH = resize_frame(frame)
+		
 	# 	## Check for motion
 	# 	if (motion_detection(frame,min_area, authorization_token) == True or min_area==0):
 	# 		# print ("motion detected")
