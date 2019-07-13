@@ -177,7 +177,7 @@ def decode_predictions(scores, geometry,frame,adjustment_factor_x,adjustment_fac
 	# return a tuple of the bounding boxes and associated confidences
 	return (rects, confidences)
 
-def motion_detection(frame,min_area = 100 , authorization_token = '0'):
+def motion_detection(frame,min_area, authorization_token):
 	global firstFrame
 	gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
 	gray = cv2.GaussianBlur(gray,(21,21),0)
@@ -189,7 +189,7 @@ def motion_detection(frame,min_area = 100 , authorization_token = '0'):
 		frameDelta = cv2.absdiff(firstFrame[authorization_token],gray)
 		thresh = cv2.threshold(frameDelta,90,255,cv2.THRESH_BINARY)[1]
 		thresh = cv2.dilate(thresh, None, iterations =1)
-		(_,cnts,_) = cv2.findContours(thresh.copy(),cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+		(cnts,_) = cv2.findContours(thresh.copy(),cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 		for c in cnts:
 			if cv2.contourArea(c)>min_area:
 				firstFrame[authorization_token] = gray.copy()
