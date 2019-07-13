@@ -314,4 +314,4 @@ def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area
 		output_text[authorization_token] = recognised_text[authorization_token]
 		recognised_text[authorization_token] = None
 	
-	return resized_boxes(boxes,rW,rH), output_text[authorization_token]
+	return resized_boxes(boxes,rW,rH), "output_text[authorization_token]"
