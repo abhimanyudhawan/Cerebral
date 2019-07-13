@@ -6,10 +6,10 @@ import text_detection_v10
 
 app = Flask(__name__)
 
-min_confidence = 0.999
+min_confidence = 0.1
 min_area = 0
-adjustment_factor_x = 0.7
-adjustment_factor_y = 0.4
+adjustment_factor_x = 0.8
+adjustment_factor_y = 0.85
 offline_detection = False
 x_coordinate = 0 
 y_coordinate = 0

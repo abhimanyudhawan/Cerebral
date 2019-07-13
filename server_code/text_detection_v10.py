@@ -18,7 +18,7 @@ import requests
 import json
 
 url = "http://35.199.46.130/books/search"
-
+np.seterr(divide='ignore', invalid='ignore')
 min_Area = 50
 min_Confidence = 0.1
 adjustment_Factor_x = 0.3
@@ -301,7 +301,7 @@ def imageProcessor(encoded, min_confidence = min_Confidence, min_area = min_Area
 			# decode the predictions, then  apply non-maxima suppression to
 			# suppress weak, overlapping bounding boxes
 			(rects, confidences) = decode_predictions(scores, geometry,frame,adjustment_factor_x,adjustment_factor_y,min_confidence)
-			boxes = non_max_suppression(np.array(rects), probs=confidences, overlapThresh=0.3)	
+			boxes = non_max_suppression(np.array(rects), probs=confidences, overlapThresh=0.15)	
 			if(np.size(boxes)>1):
 				boxes = crop_save(frame,boxes, x_coordinate, y_coordinate, z_coordinate, authorization_token,rW,rH)
 
